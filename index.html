@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brasil 2026 - Liquidación Final</title>
+    <title>Brasil 2026 - Reporte Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
@@ -29,6 +29,12 @@
         .seccion-titulo { background: #334155; color: white; padding: 12px 15px; border-radius: 10px; font-size: 16px; font-weight: 800; margin: 25px 0 15px 0; text-align: center; }
         .historial-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
 
+        /* Estilos Reporte */
+        .reporte-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .reporte-tabla th { text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 11px; }
+        .reporte-tabla td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; }
+        .resaltado-pesos { color: #16a34a; font-weight: 800; }
+        
         .balance-card { text-align: center; padding: 25px; background: #1e293b; color: white; border-radius: 20px; margin-bottom: 20px; }
         .parejas-arriba { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 20px; font-weight: 900; color: #fbbf24; }
         .parejas-arriba small { font-size: 12px; color: #94a3b8; display: block; text-transform: uppercase; }
@@ -39,8 +45,7 @@
         .gana-p2 { background: #ffe4e6; color: #9f1239; border-color: #f43f5e; }
 
         .liquidador-box { background: #fdf2f8; border: 2px solid #f472b6; border-radius: 20px; padding: 20px; margin-top: 30px; }
-        .input-cambio { background: #fff; border: 2px solid #f472b6; font-weight: bold; text-align: center; color: #be185d; }
-        .resumen-fila { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 15px; }
+        .input-cambio { background: #fff; border: 2px solid #cbd5e1; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
@@ -69,7 +74,6 @@
         <select id="moneda">
             <option value="REALES">REALES (R$)</option>
             <option value="PESOS">PESOS ($)</option>
-            <option value="DOLARES">DÓLARES (U$S)</option>
         </select>
         <label>Monto</label>
         <input type="number" id="monto" inputmode="decimal" placeholder="0.00">
@@ -90,26 +94,44 @@
 
 <div id="HISTORIAL" class="container">
     <h2>HISTORIAL</h2>
+    
+    <div class="card" style="padding:15px">
+        <label style="font-size:16px; color:#1e293b">📊 REPORTE POR RUBRO</label>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:#f1f5f9; padding:10px; border-radius:10px;">
+            <small style="font-weight:bold; font-size:10px;">TIPO CAMBIO:</small>
+            <input type="number" id="tc-reporte" placeholder="Ej: 8.5" style="margin:0; padding:8px; font-size:14px;" oninput="generarReporteRubros()">
+        </div>
+        
+        <table class="reporte-tabla" id="tabla-rubros">
+            <thead>
+                <tr>
+                    <th>RUBRO</th>
+                    <th>REALES</th>
+                    <th>PESOS</th>
+                    <th>TOTAL ($)</th>
+                </tr>
+            </thead>
+            <tbody id="body-reporte">
+                </tbody>
+        </table>
+    </div>
+
     <div id="listas-por-moneda"></div>
 </div>
 
 <div id="BALANCE" class="container">
     <h2>BALANCE FINAL</h2>
-    
     <div class="card" style="background: #f1f5f9; padding: 15px;">
         <label>REVISAR MONEDA INDIVIDUAL:</label>
         <select id="moneda-balance" onchange="calcularBalance()" style="margin-bottom:0">
             <option value="REALES">REALES (R$)</option>
             <option value="PESOS">PESOS ($)</option>
-            <option value="DOLARES">DÓLARES (U$S)</option>
         </select>
     </div>
-
     <div class="card">
         <label>Gastos por persona (Moneda seleccionada):</label>
         <div id="detalle-individual" style="font-size: 18px;"></div>
     </div>
-
     <div class="balance-card">
         <div class="parejas-arriba">
             <div><small>Pareja 1 (J+T)</small><span id="total-p1">0</span></div>
@@ -120,27 +142,15 @@
             <div id="total-viaje">0</div>
         </div>
     </div>
-
     <div id="veredicto" class="resultado-final"></div>
-
     <div class="liquidador-box">
         <h3 style="margin-top:0; color:#be185d; text-align:center; font-size:20px;">💰 CIERRE TOTAL (PESOS)</h3>
-        <p style="font-size:13px; text-align:center; margin-bottom:20px;">Convierte todo a Pesos para saldar la deuda final.</p>
-        
-        <div class="resumen-fila">
-            <label style="margin:0">CAMBIO REAL:</label>
-            <input type="number" id="tc-real" class="input-cambio" placeholder="0.00" style="width:120px; margin:0" oninput="liquidarTodo()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <label style="margin:0">COTIZACIÓN DEL REAL:</label>
+            <input type="number" id="tc-real" class="input-cambio" placeholder="0.00" style="width:120px; margin:0; border-color:#f472b6; color:#be185d" oninput="liquidarTodo()">
         </div>
-        <div class="resumen-fila" style="margin-bottom:20px">
-            <label style="margin:0">CAMBIO DÓLAR:</label>
-            <input type="number" id="tc-dolar" class="input-cambio" placeholder="0.00" style="width:120px; margin:0" oninput="liquidarTodo()">
-        </div>
-
-        <div id="detalles-conversion" style="font-size:14px; border-top:1px dashed #f472b6; padding-top:10px; margin-bottom:15px;"></div>
-
-        <div id="veredicto-final-pesos" class="resultado-final" style="background:#fff; border-color:#be185d; color:#be185d; font-size:22px;">
-            Ingresa los tipos de cambio...
-        </div>
+        <div id="detalles-conversion" style="font-size:14px; border-top:1px dashed #f472b6; padding-top:10px; margin-bottom:15px; text-align:center;"></div>
+        <div id="veredicto-final-pesos" class="resultado-final" style="background:#fff; border-color:#be185d; color:#be185d; font-size:22px;">Ingresa la cotización...</div>
     </div>
 </div>
 
@@ -160,10 +170,8 @@
     const GRUPO_1 = ["JUAN", "TANIA"];
     const GRUPO_2 = ["ROSARIO", "RICHARD"];
 
-    let sumasGlobales = {
-        P1: { REALES: 0, PESOS: 0, DOLARES: 0 },
-        P2: { REALES: 0, PESOS: 0, DOLARES: 0 }
-    };
+    let todosLosGastos = [];
+    let sumasGlobales = { P1: { REALES: 0, PESOS: 0 }, P2: { REALES: 0, PESOS: 0 } };
 
     function showTab(id, btn) {
         document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
@@ -182,34 +190,33 @@
         const moneda = document.getElementById('moneda').value;
         const monto = parseFloat(document.getElementById('monto').value);
         let rubro = document.getElementById('rubro').value;
-        if(rubro === 'VARIOS' && document.getElementById('rubro-otro').value !== "") rubro = "Varios: " + document.getElementById('rubro-otro').value;
-        if (!monto || monto <= 0) return alert("Ingresa un monto válido");
-
+        if(rubro === 'VARIOS' && document.getElementById('rubro-otro').value !== "") rubro = "VAR: " + document.getElementById('rubro-otro').value;
+        if (!monto || monto <= 0) return alert("Monto inválido");
         db.ref('viaje_brasil_2026').push({
             pagador, moneda, monto, rubro,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             fecha: new Date().toLocaleDateString('es-UY')
-        }).then(() => {
-            alert("✅ Guardado");
-            document.getElementById('monto').value = "";
-        });
+        }).then(() => { alert("✅ Guardado"); document.getElementById('monto').value = ""; });
     }
 
     function cargarHistorial() {
         db.ref('viaje_brasil_2026').once('value', s => {
-            const gastos = { REALES: [], PESOS: [], DOLARES: [] };
+            const gastos = { REALES: [], PESOS: [] };
+            todosLosGastos = [];
             s.forEach(c => {
                 const g = c.val(); g.id = c.key;
+                todosLosGastos.push(g);
                 if(gastos[g.moneda]) gastos[g.moneda].push(g);
             });
+            generarReporteRubros();
             let html = "";
-            ["REALES", "PESOS", "DOLARES"].forEach(m => {
+            ["REALES", "PESOS"].forEach(m => {
                 if(gastos[m].length > 0) {
                     html += `<div class="seccion-titulo">GASTOS EN ${m}</div>`;
                     gastos[m].reverse().forEach(g => {
                         html += `<div class="card historial-item">
                             <div><small>${g.fecha}</small><br><b style="font-size:18px">${g.rubro}</b><br><small>Pagó: ${g.pagador}</small></div>
-                            <div style="text-align:right"><b>${simbolo(m)} ${g.monto}</b><br>
+                            <div style="text-align:right"><b>${m === 'REALES' ? 'R$' : '$'} ${g.monto}</b><br>
                             <button onclick="borrar('${g.id}')" style="color:#e11d48; border:1px solid #e11d48; background:none; font-size:11px; padding:4px; border-radius:5px; margin-top:5px;">ELIMINAR</button></div>
                         </div>`;
                     });
@@ -219,12 +226,35 @@
         });
     }
 
+    function generarReporteRubros() {
+        const tc = parseFloat(document.getElementById('tc-reporte').value) || 0;
+        const rubrosData = {};
+        todosLosGastos.forEach(g => {
+            let r = g.rubro;
+            if(r.startsWith("VAR:")) r = "VARIOS";
+            if(!rubrosData[r]) rubrosData[r] = { REALES: 0, PESOS: 0 };
+            rubrosData[r][g.moneda] += g.monto;
+        });
+
+        let html = "";
+        for(const r in rubrosData) {
+            const totalConvertido = rubrosData[r].PESOS + (rubrosData[r].REALES * tc);
+            html += `<tr>
+                <td style="font-weight:bold; font-size:12px;">${r}</td>
+                <td>R$ ${rubrosData[r].REALES.toLocaleString('es-UY')}</td>
+                <td>$ ${rubrosData[r].PESOS.toLocaleString('es-UY')}</td>
+                <td class="resaltado-pesos">${tc > 0 ? '$ ' + totalConvertido.toLocaleString('es-UY', {maximumFractionDigits:0}) : '-'}</td>
+            </tr>`;
+        }
+        document.getElementById('body-reporte').innerHTML = html || "<tr><td colspan='4' style='text-align:center'>No hay datos</td></tr>";
+    }
+
     function borrar(id) { if(confirm("¿Borrar?")) db.ref(`viaje_brasil_2026/${id}`).remove().then(()=>cargarHistorial()); }
 
     function calcularBalance() {
         const monSel = document.getElementById('moneda-balance').value;
         db.ref('viaje_brasil_2026').once('value', s => {
-            sumasGlobales = { P1: { REALES: 0, PESOS: 0, DOLARES: 0 }, P2: { REALES: 0, PESOS: 0, DOLARES: 0 } };
+            sumasGlobales = { P1: { REALES: 0, PESOS: 0 }, P2: { REALES: 0, PESOS: 0 } };
             let ind = {JUAN:0, TANIA:0, ROSARIO:0, RICHARD:0};
             s.forEach(c => {
                 const g = c.val();
@@ -232,7 +262,7 @@
                 sumasGlobales[pareja][g.moneda] += g.monto;
                 if(g.moneda === monSel) ind[g.pagador] += g.monto;
             });
-            const tP1 = sumasGlobales.P1[monSel], tP2 = sumasGlobales.P2[monSel], total = tP1 + tP2, dif = tP1 - (total/2), sim = simbolo(monSel);
+            const tP1 = sumasGlobales.P1[monSel], tP2 = sumasGlobales.P2[monSel], total = tP1 + tP2, dif = tP1 - (total/2), sim = (monSel === 'REALES' ? 'R$' : '$');
             document.getElementById('total-viaje').innerText = `${sim} ${total.toLocaleString('es-UY')}`;
             document.getElementById('total-p1').innerText = `${sim} ${tP1.toLocaleString('es-UY')}`;
             document.getElementById('total-p2').innerText = `${sim} ${tP2.toLocaleString('es-UY')}`;
@@ -250,27 +280,17 @@
 
     function liquidarTodo() {
         const tcR = parseFloat(document.getElementById('tc-real').value);
-        const tcD = parseFloat(document.getElementById('tc-dolar').value);
         const vf = document.getElementById('veredicto-final-pesos');
         const det = document.getElementById('detalles-conversion');
-
-        if(isNaN(tcR) || isNaN(tcD)) {
-            vf.innerText = "Ingresa los tipos de cambio...";
-            det.innerHTML = "";
-            return;
-        }
-
-        const p1EnPesos = sumasGlobales.P1.PESOS + (sumasGlobales.P1.REALES * tcR) + (sumasGlobales.P1.DOLARES * tcD);
-        const p2EnPesos = sumasGlobales.P2.PESOS + (sumasGlobales.P2.REALES * tcR) + (sumasGlobales.P2.DOLARES * tcD);
-        const totalGral = p1EnPesos + p2EnPesos, difFinal = p1EnPesos - (totalGral / 2);
-
-        det.innerHTML = `P1: $ ${p1EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})} | P2: $ ${p2EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})}`;
+        if(isNaN(tcR)) { vf.innerText = "Ingresa la cotización..."; det.innerHTML = ""; return; }
+        const p1Total = sumasGlobales.P1.PESOS + (sumasGlobales.P1.REALES * tcR);
+        const p2Total = sumasGlobales.P2.PESOS + (sumasGlobales.P2.REALES * tcR);
+        const totalGral = p1Total + p2Total, difFinal = p1Total - (totalGral / 2);
+        det.innerHTML = `P1: $ ${p1Total.toLocaleString('es-UY', {maximumFractionDigits:0})} | P2: $ ${p2Total.toLocaleString('es-UY', {maximumFractionDigits:0})}`;
         vf.innerHTML = totalGral === 0 ? "Esperando datos..." : 
             (difFinal > 0 ? `<small>DEUDA FINAL:</small><br>PAREJA 2 ADEUDA A PAREJA 1<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>` : 
             `<small>DEUDA FINAL:</small><br>PAREJA 1 ADEUDA A PAREJA 2<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>`);
     }
-
-    function simbolo(m) { return m === 'REALES' ? 'R$' : m === 'PESOS' ? '$' : 'U$S'; }
 </script>
 </body>
 </html>

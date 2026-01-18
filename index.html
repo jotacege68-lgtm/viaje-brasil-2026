@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brasil 2026 - Gastos</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root { 
+            --p1-color: #0284c7; /* Azul para Juan y Tania */
+            --p2-color: #e11d48; /* Rojo para Rosario y Richard */
+            --bg: #f8fafc; 
+            --header-h: 70px; 
+            --accent: #16a34a; /* Verde Brasil */
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-top: calc(var(--header-h) + 20px); color: #334155; }
+        
+        /* Navegación */
+        .tabs { position: fixed; top: 0; width: 100%; background: #0f172a; display: flex; height: var(--header-h); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; }
+        .tab-btn { flex: 1; border: none; background: none; font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;}
+        .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 4px solid #fbbf24; }
+        
+        /* Contenedores */
+        .container { padding: 15px; display: none; max-width: 600px; margin: auto; }
+        .container.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(5px);} to { opacity:1; transform: translateY(0);} }
+
+        .card { background: white; padding: 20px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        
+        /* Formulario */
+        label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        select, input { width: 100%; padding: 16px; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        select:focus, input:focus { border-color: var(--p1-color); }
+        
+        button { width: 100%; padding: 18px; border: none; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); }
+        .btn-save { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3); }
+        
+        /* Historial */
+        .historial-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .tag-p1 { color: var(--p1-color); background: #e0f2fe; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+        .tag-p2 { color: var(--p2-color); background: #ffe4e6; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+        
+        /* Balance Dashboard */
+        .balance-card { text-align: center; padding: 20px; background: #1e293b; color: white; border-radius: 16px; margin-bottom: 20px; }
+        .big-number { font-size: 2.5rem; font-weight: 900; margin: 10px 0; color: #fbbf24; }
+        .vs-container { display: flex; justify-content: space-between; margin-top: 20px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; }
+        .vs-item h4 { margin: 0 0 5px 0; font-size: 12px; opacity: 0.7; }
+        .vs-item span { font-size: 1.2rem; font-weight: 700; }
+        
+        .resultado-final { margin-top: 20px; padding: 15px; border-radius: 12px; font-weight: bold; text-align: center; font-size: 1.1rem; }
+        .gana-p1 { background: #dbeafe; color: #1e40af; border: 2px solid #3b82f6; } /* Pareja 2 debe a Pareja 1 */
+        .gana-p2 { background: #ffe4e6; color: #9f1239; border: 2px solid #e11d48; } /* Pareja 1 debe a Pareja 2 */
+        .empate { background: #ecfccb; color: #365314; }
+
+    </style>
+</head>
+<body>
+
+<nav class="tabs">
+    <button class="tab-btn active" onclick="showTab('CARGAR', this)">➕ <br>Nuevo Gasto</button>
+    <button class="tab-btn" onclick="showTab('HISTORIAL', this)">📅 <br>Historial</button>
+    <button class="tab-btn" onclick="showTab('BALANCE', this)">💰 <br>Quién Debe</button>
+</nav>
+
+<div id="CARGAR" class="container active">
+    <div class="card">
+        <label>¿Quién Pagó?</label>
+        <select id="pagador">
+            <optgroup label="Pareja 1 (Juan/Tania)">
+                <option value="JUAN">Juan</option>
+                <option value="TANIA">Tania</option>
+            </optgroup>
+            <optgroup label="Pareja 2 (Rosario/Richard)">
+                <option value="ROSARIO">Rosario</option>
+                <option value="RICHARD">Richard</option>
+            </optgroup>
+        </select>
+
+        <label>Concepto / Rubro</label>
+        <select id="rubro" onchange="checkOtro(this)">
+            <option value="COMIDA/RESTAURANTE">🍔 Comida / Restaurante</option>
+            <option value="SUPERMERCADO">🛒 Supermercado</option>
+            <option value="ALOJAMIENTO">🏨 Alojamiento</option>
+            <option value="NAFTA/PEAJES">⛽ Nafta / Peajes</option>
+            <option value="ENTRADAS/PASEOS">🎫 Entradas / Paseos</option>
+            <option value="PLAYA/KIOSCO">🏖️ Playa / Kiosco</option>
+            <option value="VARIOS">🔹 Varios</option>
+            <option value="OTRO">✏️ Otro (Escribir)</option>
+        </select>
+        <input type="text" id="rubro-otro" placeholder="Especifique..." style="display:none;">
+        
+        <label>Monto (Reales/Dólares - Usar siempre la misma moneda)</label>
+        <input type="number" id="monto" inputmode="decimal" placeholder="0.00">
+
+        <label>Nota Opcional</label>
+        <input type="text" id="nota" placeholder="Ej: Cena en Florianópolis...">
+
+        <button class="btn-save" onclick="guardarGasto()">💾 GUARDAR GASTO</button>
+    </div>
+</div>
+
+<div id="HISTORIAL" class="container">
+    <div class="card" style="background:#f1f5f9; padding:10px;">
+        <input type="text" id="buscador" placeholder="🔍 Buscar gasto..." onkeyup="filtrarHistorial()" style="margin:0; padding:10px;">
+    </div>
+    <div id="lista-gastos">
+        <div style="text-align:center; padding:20px; color:#94a3b8;">Cargando...</div>
+    </div>
+</div>
+
+<div id="BALANCE" class="container">
+    <div class="balance-card">
+        <span>COSTO TOTAL DEL VIAJE</span>
+        <div class="big-number" id="total-viaje">$0</div>
+        <div style="font-size: 13px; color: #cbd5e1;">(Debe ser $0 por pareja)</div>
+        
+        <div class="vs-container">
+            <div class="vs-item" style="color: #38bdf8;">
+                <h4>PAREJA 1<br>(Juan+Tania)</h4>
+                <span id="total-p1">$0</span>
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,0.2)"></div>
+            <div class="vs-item" style="color: #fb7185;">
+                <h4>PAREJA 2<br>(Rosario+Richard)</h4>
+                <span id="total-p2">$0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="veredicto" class="resultado-final">
+        Calculando...
+    </div>
+
+    <div class="card">
+        <label>Resumen por Integrante</label>
+        <ul id="detalle-individual" style="list-style:none; padding:0; margin:0;"></ul>
+    </div>
+    
+    <button onclick="calcularBalance()" style="background:#475569; margin-top:20px;">🔄 ACTUALIZAR DATOS</button>
+</div>
+
+<script>
+    // --- CONFIGURACIÓN FIREBASE (Usa tus mismas llaves si quieres mantener la DB) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBDlHjKXf33pCEznyLAmFrTDXVPevrHe9Q",
+      authDomain: "gastoscasa-d8bc2.firebaseapp.com",
+      databaseURL: "https://gastoscasa-d8bc2-default-rtdb.firebaseio.com",
+      projectId: "gastoscasa-d8bc2",
+      storageBucket: "gastoscasa-d8bc2.firebasestorage.app",
+      messagingSenderId: "749635992986",
+      appId: "1:749635992986:web:7916d888f54eb5c3ab0e23"
+    };
+
+    // Inicializar
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
+    // --- LÓGICA DE PAREJAS ---
+    const GRUPO_1 = ["JUAN", "TANIA"]; // Pareja 1
+    const GRUPO_2 = ["ROSARIO", "RICHARD"]; // Pareja 2
+
+    // --- FUNCIONES ---
+
+    function showTab(id, btn) {
+        document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+        if(id === 'HISTORIAL') cargarHistorial();
+        if(id === 'BALANCE') calcularBalance();
+    }
+
+    function checkOtro(select) {
+        const input = document.getElementById('rubro-otro');
+        input.style.display = select.value === 'OTRO' ? 'block' : 'none';
+        if(select.value === 'OTRO') input.focus();
+    }
+
+    function guardarGasto() {
+        const pagador = document.getElementById('pagador').value;
+        let rubro = document.getElementById('rubro').value;
+        if(rubro === 'OTRO') rubro = document.getElementById('rubro-otro').value.toUpperCase();
+        
+        const monto = parseFloat(document.getElementById('monto').value);
+        const nota = document.getElementById('nota').value;
+
+        if (!monto || monto <= 0) return alert("❌ Ingresa un monto válido");
+        if (!rubro) return alert("❌ Ingresa un rubro");
+
+        const gasto = {
+            pagador: pagador,
+            rubro: rubro,
+            monto: monto,
+            nota: nota,
+            fecha: new Date().toISOString(), // Fecha técnica
+            fechaDisplay: new Date().toLocaleDateString('es-UY'), // Fecha legible
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        // Guardamos en un nodo nuevo "viaje_brasil" para no mezclar con lo anterior
+        db.ref('viaje_brasil_2026').push(gasto)
+            .then(() => {
+                alert("✅ Gasto Guardado");
+                document.getElementById('monto').value = "";
+                document.getElementById('nota').value = "";
+                document.getElementById('rubro').value = "COMIDA/RESTAURANTE";
+                document.getElementById('rubro-otro').style.display = 'none';
+            })
+            .catch(e => alert("Error: " + e.message));
+    }
+
+    let todosLosGastos = [];
+
+    function cargarHistorial() {
+        const lista = document.getElementById('lista-gastos');
+        lista.innerHTML = '<p style="text-align:center">Cargando...</p>';
+
+        db.ref('viaje_brasil_2026').orderByChild('timestamp').limitToLast(100).once('value', snapshot => {
+            todosLosGastos = [];
+            snapshot.forEach(child => {
+                let g = child.val();
+                g.id = child.key;
+                todosLosGastos.unshift(g); // Poner el más nuevo arriba
+            });
+            renderizarLista(todosLosGastos);
+        });
+    }
+
+    function renderizarLista(gastos) {
+        const lista = document.getElementById('lista-gastos');
+        if(gastos.length === 0) {
+            lista.innerHTML = '<p style="text-align:center; color:#94a3b8;">No hay gastos cargados aún.</p>';
+            return;
+        }
+
+        let html = "";
+        gastos.forEach(g => {
+            // Determinar color segun pareja
+            const esP1 = GRUPO_1.includes(g.pagador);
+            const claseTag = esP1 ? 'tag-p1' : 'tag-p2';
+            const etiqueta = esP1 ? 'PAREJA 1' : 'PAREJA 2';
+            
+            html += `
+            <div class="card historial-item">
+                <div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:2px;">${g.fechaDisplay}</div>
+                    <div style="font-weight:bold; font-size:15px;">${g.rubro}</div>
+                    ${g.nota ? `<div style="font-style:italic; font-size:13px; color:#64748b;">"${g.nota}"</div>` : ''}
+                    <span class="${claseTag}">👤 ${g.pagador}</span>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:18px; font-weight:900;">$${g.monto}</div>
+                    <button onclick="borrarGasto('${g.id}')" style="background:none; border:none; color:#ef4444; font-size:11px; padding:0; text-decoration:underline; width:auto; display:inline;">Eliminar</button>
+                </div>
+            </div>`;
+        });
+        lista.innerHTML = html;
+    }
+
+    function borrarGasto(id) {
+        if(confirm("¿Seguro que quieres borrar este gasto?")) {
+            db.ref(`viaje_brasil_2026/${id}`).remove().then(() => cargarHistorial());
+        }
+    }
+
+    function filtrarHistorial() {
+        const texto = document.getElementById('buscador').value.toLowerCase();
+        const filtrados = todosLosGastos.filter(g => 
+            g.rubro.toLowerCase().includes(texto) || 
+            g.pagador.toLowerCase().includes(texto) ||
+            (g.nota && g.nota.toLowerCase().includes(texto))
+        );
+        renderizarLista(filtrados);
+    }
+
+    function calcularBalance() {
+        db.ref('viaje_brasil_2026').once('value', snapshot => {
+            let totalP1 = 0; // Juan + Tania
+            let totalP2 = 0; // Rosario + Richard
+            let porPersona = { "JUAN":0, "TANIA":0, "ROSARIO":0, "RICHARD":0 };
+
+            snapshot.forEach(child => {
+                const g = child.val();
+                if(GRUPO_1.includes(g.pagador)) {
+                    totalP1 += parseFloat(g.monto);
+                } else {
+                    totalP2 += parseFloat(g.monto);
+                }
+                
+                if(porPersona[g.pagador] !== undefined) {
+                    porPersona[g.pagador] += parseFloat(g.monto);
+                }
+            });
+
+            const granTotal = totalP1 + totalP2;
+            const debeHaberPagadoCadaPareja = granTotal / 2;
+            const diferencia = totalP1 - debeHaberPagadoCadaPareja; 
+            // Si diferencia es positiva, P1 pagó de más (P2 le debe). 
+            // Si es negativa, P1 pagó de menos (P1 le debe a P2).
+
+            // Renderizar DOM
+            document.getElementById('total-viaje').innerText = "$" + granTotal.toFixed(0);
+            document.getElementById('total-p1').innerText = "$" + totalP1.toFixed(0);
+            document.getElementById('total-p2').innerText = "$" + totalP2.toFixed(0);
+
+            const divVeredicto = document.getElementById('veredicto');
+            divVeredicto.className = 'resultado-final'; // Reset classes
+
+            if(Math.abs(diferencia) < 1) {
+                divVeredicto.innerText = "¡ESTÁN A MANO! (Diferencia despreciable)";
+                divVeredicto.classList.add('empate');
+            } else if (diferencia > 0) {
+                // P1 pagó mas
+                divVeredicto.innerText = `LA PAREJA 2 LE DEBE A LA PAREJA 1: $${Math.abs(diferencia).toFixed(0)}`;
+                divVeredicto.classList.add('gana-p1');
+            } else {
+                // P1 pagó menos
+                divVeredicto.innerText = `LA PAREJA 1 LE DEBE A LA PAREJA 2: $${Math.abs(diferencia).toFixed(0)}`;
+                divVeredicto.classList.add('gana-p2');
+            }
+
+            // Detalle individual
+            let htmlInd = "";
+            for (const [persona, monto] of Object.entries(porPersona)) {
+                htmlInd += `<li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #e2e8f0;">
+                    <span>${persona}</span> 
+                    <b>$${monto.toFixed(0)}</b>
+                </li>`;
+            }
+            document.getElementById('detalle-individual').innerHTML = htmlInd;
+        });
+    }
+    
+    // Iniciar en pestaña cargar
+    window.onload = () => showTab('CARGAR', document.querySelector('.tab-btn'));
+
+</script>
+</body>
+</html>

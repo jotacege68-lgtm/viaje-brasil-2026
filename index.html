@@ -3,51 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brasil 2026 - Multimoneda</title>
+    <title>Brasil 2026 - Liquidación Final</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
     <style>
-        :root { --p1-color: #0284c7; --p2-color: #e11d48; --bg: #f8fafc; --header-h: 70px; --accent: #16a34a; }
+        :root { --p1-color: #0284c7; --p2-color: #e11d48; --bg: #f8fafc; --header-h: 90px; --accent: #16a34a; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-top: calc(var(--header-h) + 20px); color: #334155; }
         
         .tabs { position: fixed; top: 0; width: 100%; background: #0f172a; display: flex; height: var(--header-h); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; }
-        .tab-btn { flex: 1; border: none; background: none; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;}
-        .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 4px solid #fbbf24; }
+        .tab-btn { flex: 1; border: none; background: none; font-size: 14px; font-weight: 800; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;}
+        .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 6px solid #fbbf24; }
         
         .container { padding: 15px; display: none; max-width: 600px; margin: auto; }
         .container.active { display: block; }
 
-        .card { background: white; padding: 20px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        select, input { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
+        .card { background: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        h2 { font-size: 24px; font-weight: 900; margin-top: 0; color: #1e293b; text-transform: uppercase; border-bottom: 3px solid #fbbf24; display: inline-block; margin-bottom: 20px; }
         
-        .btn-save { background: var(--accent); color: white; padding: 18px; border: none; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; width: 100%; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 800; color: #475569; text-transform: uppercase; }
+        select, input { width: 100%; padding: 16px; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; box-sizing: border-box; }
         
-        .moneda-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900; margin-right: 5px; }
-        .m-reales { background: #fef08a; color: #854d0e; }
-        .m-pesos { background: #dcfce7; color: #166534; }
-        .m-dolares { background: #dbeafe; color: #1e40af; }
+        .btn-save { background: var(--accent); color: white; padding: 20px; border: none; border-radius: 15px; font-weight: 900; font-size: 20px; cursor: pointer; width: 100%; box-shadow: 0 4px 0 #15803d; }
+        
+        .seccion-titulo { background: #334155; color: white; padding: 12px 15px; border-radius: 10px; font-size: 16px; font-weight: 800; margin: 25px 0 15px 0; text-align: center; }
+        .historial-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
 
-        .historial-item { padding: 12px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-        .seccion-titulo { background: #334155; color: white; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: 800; margin: 20px 0 10px 0; }
+        .balance-card { text-align: center; padding: 25px; background: #1e293b; color: white; border-radius: 20px; margin-bottom: 20px; }
+        .parejas-arriba { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 20px; font-weight: 900; color: #fbbf24; }
+        .parejas-arriba small { font-size: 12px; color: #94a3b8; display: block; text-transform: uppercase; }
+        .monto-abajo { font-size: 38px; font-weight: 900; border-top: 1px solid #475569; padding-top: 15px; }
 
-        .balance-card { text-align: center; padding: 20px; background: #1e293b; color: white; border-radius: 16px; margin-bottom: 15px; }
-        .big-number { font-size: 2.2rem; font-weight: 900; margin: 10px 0; color: #fbbf24; }
-        .resultado-final { padding: 15px; border-radius: 12px; font-weight: 800; text-align: center; }
-        .gana-p1 { background: #dbeafe; color: #1e40af; }
-        .gana-p2 { background: #ffe4e6; color: #9f1239; }
+        .resultado-final { padding: 20px; border-radius: 15px; font-weight: 900; text-align: center; font-size: 18px; border: 3px solid transparent; margin-bottom: 10px; }
+        .gana-p1 { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+        .gana-p2 { background: #ffe4e6; color: #9f1239; border-color: #f43f5e; }
+
+        /* Estilos para el Liquidador Final */
+        .liquidador-box { background: #fdf2f8; border: 2px solid #f472b6; border-radius: 20px; padding: 20px; margin-top: 30px; }
+        .input-cambio { background: #fff; border: 2px solid #f472b6; font-weight: bold; text-align: center; color: #be185d; }
+        .resumen-fila { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 15px; }
     </style>
 </head>
 <body>
 
 <nav class="tabs">
-    <button class="tab-btn active" onclick="showTab('CARGAR', this)">➕ <br>Nuevo</button>
-    <button class="tab-btn" onclick="showTab('HISTORIAL', this)">📅 <br>Historial</button>
-    <button class="tab-btn" onclick="showTab('BALANCE', this)">📊 <br>Balance Final</button>
+    <button class="tab-btn active" onclick="showTab('CARGAR', this)">➕ <br>NUEVO GASTO</button>
+    <button class="tab-btn" onclick="showTab('HISTORIAL', this)">📅 <br>HISTORIAL</button>
+    <button class="tab-btn" onclick="showTab('BALANCE', this)">📊 <br>BALANCE FINAL</button>
 </nav>
 
 <div id="CARGAR" class="container active">
+    <h2>NUEVO GASTO</h2>
     <div class="card">
         <label>¿Quién Pagó?</label>
         <select id="pagador">
@@ -60,41 +66,40 @@
                 <option value="RICHARD">Richard</option>
             </optgroup>
         </select>
-
         <label>Moneda</label>
         <select id="moneda">
             <option value="REALES">REALES (R$)</option>
             <option value="PESOS">PESOS ($)</option>
             <option value="DOLARES">DÓLARES (U$S)</option>
         </select>
-
         <label>Monto</label>
         <input type="number" id="monto" inputmode="decimal" placeholder="0.00">
-
         <label>Rubro</label>
         <select id="rubro" onchange="checkOtro(this)">
-            <option value="COMIDA">🍔 Comida</option>
+            <option value="COMIDA FUERA">🍔 Comida fuera</option>
             <option value="SUPER">🛒 Super</option>
+            <option value="BEBIDAS">🍺 Bebidas</option>
             <option value="ALOJAMIENTO">🏨 Alojamiento</option>
-            <option value="NAFTA/PEAJES">⛽ Nafta/Peajes</option>
-            <option value="VARIOS">🔹 Varios</option>
-            <option value="OTRO">✏️ Otro...</option>
+            <option value="NAFTA">⛽ Nafta</option>
+            <option value="PEAJES">🛣️ Peajes</option>
+            <option value="VARIOS">✏️ Varios (Otro)</option>
         </select>
-        <input type="text" id="rubro-otro" placeholder="¿Qué gasto fue?" style="display:none;">
-
-        <button class="btn-save" onclick="guardarGasto()">💾 GUARDAR</button>
+        <input type="text" id="rubro-otro" placeholder="¿Qué gasto fue?" style="display:none; margin-top: 10px;">
+        <button class="btn-save" onclick="guardarGasto()">💾 GUARDAR GASTO</button>
     </div>
 </div>
 
 <div id="HISTORIAL" class="container">
-    <div id="listas-por-moneda">
-        </div>
+    <h2>HISTORIAL</h2>
+    <div id="listas-por-moneda"></div>
 </div>
 
 <div id="BALANCE" class="container">
-    <div class="card" style="background: #f1f5f9;">
-        <label>VER BALANCE EN:</label>
-        <select id="moneda-balance" onchange="calcularBalance()">
+    <h2>BALANCE FINAL</h2>
+    
+    <div class="card" style="background: #f1f5f9; padding: 15px;">
+        <label>REVISAR MONEDA INDIVIDUAL:</label>
+        <select id="moneda-balance" onchange="calcularBalance()" style="margin-bottom:0">
             <option value="REALES">REALES (R$)</option>
             <option value="PESOS">PESOS ($)</option>
             <option value="DOLARES">DÓLARES (U$S)</option>
@@ -102,20 +107,42 @@
     </div>
 
     <div class="balance-card">
-        <span id="txt-moneda-total">TOTAL DEL VIAJE</span>
-        <div class="big-number" id="total-viaje">0</div>
-        <div style="display: flex; justify-content: space-between; margin-top:15px;">
-            <div><small>P1 (J+T)</small><br><span id="total-p1">0</span></div>
-            <div style="border-left:1px solid #475569;"></div>
-            <div><small>P2 (R+R)</small><br><span id="total-p2">0</span></div>
+        <div class="parejas-arriba">
+            <div><small>Pareja 1 (J+T)</small><span id="total-p1">0</span></div>
+            <div><small>Pareja 2 (R+R)</small><span id="total-p2">0</span></div>
+        </div>
+        <div class="monto-abajo">
+            <span style="font-size:12px; display:block; color:#94a3b8">TOTAL GASTADO EN ESTA MONEDA</span>
+            <div id="total-viaje">0</div>
         </div>
     </div>
 
     <div id="veredicto" class="resultado-final"></div>
 
-    <div class="card">
-        <label>Detalle por Integrante</label>
-        <div id="detalle-individual"></div>
+    <div class="liquidador-box">
+        <h3 style="margin-top:0; color:#be185d; text-align:center; font-size:20px;">💰 CIERRE TOTAL (PESOS)</h3>
+        <p style="font-size:13px; text-align:center; margin-bottom:20px;">Convierte todo a Pesos para saldar la deuda final.</p>
+        
+        <div class="resumen-fila">
+            <label style="margin:0">CAMBIO REAL:</label>
+            <input type="number" id="tc-real" class="input-cambio" value="8.5" style="width:100px; margin:0" oninput="liquidarTodo()">
+        </div>
+        <div class="resumen-fila" style="margin-bottom:20px">
+            <label style="margin:0">CAMBIO DÓLAR:</label>
+            <input type="number" id="tc-dolar" class="input-cambio" value="42.5" style="width:100px; margin:0" oninput="liquidarTodo()">
+        </div>
+
+        <div id="detalles-conversion" style="font-size:14px; border-top:1px dashed #f472b6; padding-top:10px; margin-bottom:15px;">
+            </div>
+
+        <div id="veredicto-final-pesos" class="resultado-final" style="background:#fff; border-color:#be185d; color:#be185d; font-size:22px;">
+            Calculando saldo final...
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <label>Gastos por persona (Moneda seleccionada):</label>
+        <div id="detalle-individual" style="font-size: 18px;"></div>
     </div>
 </div>
 
@@ -135,6 +162,11 @@
     const GRUPO_1 = ["JUAN", "TANIA"];
     const GRUPO_2 = ["ROSARIO", "RICHARD"];
 
+    let sumasGlobales = {
+        P1: { REALES: 0, PESOS: 0, DOLARES: 0 },
+        P2: { REALES: 0, PESOS: 0, DOLARES: 0 }
+    };
+
     function showTab(id, btn) {
         document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -142,18 +174,18 @@
         btn.classList.add('active');
         if(id === 'HISTORIAL') cargarHistorial();
         if(id === 'BALANCE') calcularBalance();
+        window.scrollTo(0,0);
     }
 
-    function checkOtro(s) { document.getElementById('rubro-otro').style.display = s.value === 'OTRO' ? 'block' : 'none'; }
+    function checkOtro(s) { document.getElementById('rubro-otro').style.display = s.value === 'VARIOS' ? 'block' : 'none'; }
 
     function guardarGasto() {
         const pagador = document.getElementById('pagador').value;
         const moneda = document.getElementById('moneda').value;
         const monto = parseFloat(document.getElementById('monto').value);
         let rubro = document.getElementById('rubro').value;
-        if(rubro === 'OTRO') rubro = document.getElementById('rubro-otro').value;
-
-        if (!monto || monto <= 0) return alert("Monto inválido");
+        if(rubro === 'VARIOS' && document.getElementById('rubro-otro').value !== "") rubro = "Varios: " + document.getElementById('rubro-otro').value;
+        if (!monto || monto <= 0) return alert("Ingresa un monto válido");
 
         db.ref('viaje_brasil_2026').push({
             pagador, moneda, monto, rubro,
@@ -173,21 +205,20 @@
                 g.id = c.key;
                 if(gastos[g.moneda]) gastos[g.moneda].push(g);
             });
-
             let html = "";
             ["REALES", "PESOS", "DOLARES"].forEach(m => {
                 if(gastos[m].length > 0) {
-                    html += `<div class="seccion-titulo">LISTA ${m}</div>`;
+                    html += `<div class="seccion-titulo">GASTOS EN ${m}</div>`;
                     gastos[m].reverse().forEach(g => {
                         html += `<div class="card historial-item">
-                            <div><small>${g.fecha}</small><br><b>${g.rubro}</b><br><small>${g.pagador}</small></div>
-                            <div style="text-align:right"><b>${m === 'REALES' ? 'R$' : m === 'PESOS' ? '$' : 'U$S'} ${g.monto}</b><br>
-                            <button onclick="borrar('${g.id}')" style="color:red; border:none; background:none; font-size:10px;">Eliminar</button></div>
+                            <div><small>${g.fecha}</small><br><b style="font-size:18px">${g.rubro}</b><br><small>Pagó: ${g.pagador}</small></div>
+                            <div style="text-align:right"><b>${simbolo(m)} ${g.monto}</b><br>
+                            <button onclick="borrar('${g.id}')" style="color:#e11d48; border:1px solid #e11d48; background:none; font-size:11px; padding:4px; border-radius:5px; margin-top:5px;">ELIMINAR</button></div>
                         </div>`;
                     });
                 }
             });
-            document.getElementById('listas-por-moneda').innerHTML = html || "<p style='text-align:center'>No hay gastos</p>";
+            document.getElementById('listas-por-moneda').innerHTML = html || "<p style='text-align:center'>Sin gastos.</p>";
         });
     }
 
@@ -196,32 +227,71 @@
     function calcularBalance() {
         const monSel = document.getElementById('moneda-balance').value;
         db.ref('viaje_brasil_2026').once('value', s => {
-            let tP1 = 0, tP2 = 0, ind = {JUAN:0, TANIA:0, ROSARIO:0, RICHARD:0};
+            // Reset sumas globales para el liquidador
+            sumasGlobales = { P1: { REALES: 0, PESOS: 0, DOLARES: 0 }, P2: { REALES: 0, PESOS: 0, DOLARES: 0 } };
+            let ind = {JUAN:0, TANIA:0, ROSARIO:0, RICHARD:0};
+
             s.forEach(c => {
                 const g = c.val();
-                if(g.moneda === monSel) {
-                    if(GRUPO_1.includes(g.pagador)) tP1 += g.monto; else tP2 += g.monto;
-                    ind[g.pagador] += g.monto;
-                }
+                const pareja = GRUPO_1.includes(g.pagador) ? 'P1' : 'P2';
+                sumasGlobales[pareja][g.moneda] += g.monto;
+                if(g.moneda === monSel) ind[g.pagador] += g.monto;
             });
 
+            // Balance de moneda individual
+            const tP1 = sumasGlobales.P1[monSel];
+            const tP2 = sumasGlobales.P2[monSel];
             const total = tP1 + tP2;
             const dif = tP1 - (total/2);
-            const sim = monSel === 'REALES' ? 'R$' : monSel === 'PESOS' ? '$' : 'U$S';
+            const sim = simbolo(monSel);
 
-            document.getElementById('total-viaje').innerText = `${sim} ${total.toFixed(0)}`;
-            document.getElementById('total-p1').innerText = `${sim} ${tP1.toFixed(0)}`;
-            document.getElementById('total-p2').innerText = `${sim} ${tP2.toFixed(0)}`;
+            document.getElementById('total-viaje').innerText = `${sim} ${total.toLocaleString('es-UY')}`;
+            document.getElementById('total-p1').innerText = `${sim} ${tP1.toLocaleString('es-UY')}`;
+            document.getElementById('total-p2').innerText = `${sim} ${tP2.toLocaleString('es-UY')}`;
 
             const v = document.getElementById('veredicto');
             v.className = "resultado-final " + (dif > 0 ? "gana-p1" : "gana-p2");
-            v.innerText = dif > 0 ? `PAREJA 2 DEBE A PAREJA 1: ${sim} ${Math.abs(dif).toFixed(0)}` : `PAREJA 1 DEBE A PAREJA 2: ${sim} ${Math.abs(dif).toFixed(0)}`;
+            v.innerHTML = total === 0 ? "Sin gastos en esta moneda" : 
+                (dif > 0 ? `PAREJA 2 DEBE PAGARLE<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 1` : 
+                `LA PAREJA 1 DEBE PAGARLE<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 2`);
 
             let hInd = "";
-            for(let p in ind) hInd += `<div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px;"><span>${p}</span> <b>${sim} ${ind[p].toFixed(0)}</b></div>`;
+            for(let p in ind) hInd += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${p}:</span> <b>${sim} ${ind[p].toLocaleString('es-UY')}</b></div>`;
             document.getElementById('detalle-individual').innerHTML = hInd;
+
+            liquidarTodo(); // Actualizar el liquidador final
         });
     }
+
+    function liquidarTodo() {
+        const tcR = parseFloat(document.getElementById('tc-real').value) || 0;
+        const tcD = parseFloat(document.getElementById('tc-dolar').value) || 0;
+
+        // Convertir todo lo de P1 a Pesos
+        const p1EnPesos = sumasGlobales.P1.PESOS + (sumasGlobales.P1.REALES * tcR) + (sumasGlobales.P1.DOLARES * tcD);
+        // Convertir todo lo de P2 a Pesos
+        const p2EnPesos = sumasGlobales.P2.PESOS + (sumasGlobales.P2.REALES * tcR) + (sumasGlobales.P2.DOLARES * tcD);
+
+        const totalGral = p1EnPesos + p2EnPesos;
+        const difFinal = p1EnPesos - (totalGral / 2);
+
+        document.getElementById('detalles-conversion').innerHTML = `
+            <b>Saldos totales (convertidos):</b><br>
+            P1: $ ${p1EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})}<br>
+            P2: $ ${p2EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})}
+        `;
+
+        const vf = document.getElementById('veredicto-final-pesos');
+        if(totalGral === 0) {
+            vf.innerText = "Esperando datos...";
+        } else {
+            vf.innerHTML = difFinal > 0 ? 
+                `<small>DEUDA FINAL EN PESOS:</small><br>PAREJA 2 PAGA A PAREJA 1<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>` : 
+                `<small>DEUDA FINAL EN PESOS:</small><br>PAREJA 1 PAGA A PAREJA 2<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>`;
+        }
+    }
+
+    function simbolo(m) { return m === 'REALES' ? 'R$' : m === 'PESOS' ? '$' : 'U$S'; }
 </script>
 </body>
 </html>

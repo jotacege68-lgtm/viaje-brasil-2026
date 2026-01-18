@@ -38,7 +38,6 @@
         .gana-p1 { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
         .gana-p2 { background: #ffe4e6; color: #9f1239; border-color: #f43f5e; }
 
-        /* Estilos para el Liquidador Final */
         .liquidador-box { background: #fdf2f8; border: 2px solid #f472b6; border-radius: 20px; padding: 20px; margin-top: 30px; }
         .input-cambio { background: #fff; border: 2px solid #f472b6; font-weight: bold; text-align: center; color: #be185d; }
         .resumen-fila { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 15px; }
@@ -106,6 +105,11 @@
         </select>
     </div>
 
+    <div class="card">
+        <label>Gastos por persona (Moneda seleccionada):</label>
+        <div id="detalle-individual" style="font-size: 18px;"></div>
+    </div>
+
     <div class="balance-card">
         <div class="parejas-arriba">
             <div><small>Pareja 1 (J+T)</small><span id="total-p1">0</span></div>
@@ -125,24 +129,18 @@
         
         <div class="resumen-fila">
             <label style="margin:0">CAMBIO REAL:</label>
-            <input type="number" id="tc-real" class="input-cambio" value="8.5" style="width:100px; margin:0" oninput="liquidarTodo()">
+            <input type="number" id="tc-real" class="input-cambio" placeholder="0.00" style="width:120px; margin:0" oninput="liquidarTodo()">
         </div>
         <div class="resumen-fila" style="margin-bottom:20px">
             <label style="margin:0">CAMBIO DÓLAR:</label>
-            <input type="number" id="tc-dolar" class="input-cambio" value="42.5" style="width:100px; margin:0" oninput="liquidarTodo()">
+            <input type="number" id="tc-dolar" class="input-cambio" placeholder="0.00" style="width:120px; margin:0" oninput="liquidarTodo()">
         </div>
 
-        <div id="detalles-conversion" style="font-size:14px; border-top:1px dashed #f472b6; padding-top:10px; margin-bottom:15px;">
-            </div>
+        <div id="detalles-conversion" style="font-size:14px; border-top:1px dashed #f472b6; padding-top:10px; margin-bottom:15px;"></div>
 
         <div id="veredicto-final-pesos" class="resultado-final" style="background:#fff; border-color:#be185d; color:#be185d; font-size:22px;">
-            Calculando saldo final...
+            Ingresa los tipos de cambio...
         </div>
-    </div>
-
-    <div class="card" style="margin-top:20px;">
-        <label>Gastos por persona (Moneda seleccionada):</label>
-        <div id="detalle-individual" style="font-size: 18px;"></div>
     </div>
 </div>
 
@@ -201,8 +199,7 @@
         db.ref('viaje_brasil_2026').once('value', s => {
             const gastos = { REALES: [], PESOS: [], DOLARES: [] };
             s.forEach(c => {
-                const g = c.val();
-                g.id = c.key;
+                const g = c.val(); g.id = c.key;
                 if(gastos[g.moneda]) gastos[g.moneda].push(g);
             });
             let html = "";
@@ -227,68 +224,50 @@
     function calcularBalance() {
         const monSel = document.getElementById('moneda-balance').value;
         db.ref('viaje_brasil_2026').once('value', s => {
-            // Reset sumas globales para el liquidador
             sumasGlobales = { P1: { REALES: 0, PESOS: 0, DOLARES: 0 }, P2: { REALES: 0, PESOS: 0, DOLARES: 0 } };
             let ind = {JUAN:0, TANIA:0, ROSARIO:0, RICHARD:0};
-
             s.forEach(c => {
                 const g = c.val();
                 const pareja = GRUPO_1.includes(g.pagador) ? 'P1' : 'P2';
                 sumasGlobales[pareja][g.moneda] += g.monto;
                 if(g.moneda === monSel) ind[g.pagador] += g.monto;
             });
-
-            // Balance de moneda individual
-            const tP1 = sumasGlobales.P1[monSel];
-            const tP2 = sumasGlobales.P2[monSel];
-            const total = tP1 + tP2;
-            const dif = tP1 - (total/2);
-            const sim = simbolo(monSel);
-
+            const tP1 = sumasGlobales.P1[monSel], tP2 = sumasGlobales.P2[monSel], total = tP1 + tP2, dif = tP1 - (total/2), sim = simbolo(monSel);
             document.getElementById('total-viaje').innerText = `${sim} ${total.toLocaleString('es-UY')}`;
             document.getElementById('total-p1').innerText = `${sim} ${tP1.toLocaleString('es-UY')}`;
             document.getElementById('total-p2').innerText = `${sim} ${tP2.toLocaleString('es-UY')}`;
-
             const v = document.getElementById('veredicto');
             v.className = "resultado-final " + (dif > 0 ? "gana-p1" : "gana-p2");
-            v.innerHTML = total === 0 ? "Sin gastos en esta moneda" : 
-                (dif > 0 ? `PAREJA 2 DEBE PAGARLE<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 1` : 
-                `LA PAREJA 1 DEBE PAGARLE<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 2`);
-
+            v.innerHTML = total === 0 ? "Sin gastos" : 
+                (dif > 0 ? `LA PAREJA 2 ADEUDA<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 1` : 
+                `LA PAREJA 1 ADEUDA<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 2`);
             let hInd = "";
             for(let p in ind) hInd += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${p}:</span> <b>${sim} ${ind[p].toLocaleString('es-UY')}</b></div>`;
             document.getElementById('detalle-individual').innerHTML = hInd;
-
-            liquidarTodo(); // Actualizar el liquidador final
+            liquidarTodo();
         });
     }
 
     function liquidarTodo() {
-        const tcR = parseFloat(document.getElementById('tc-real').value) || 0;
-        const tcD = parseFloat(document.getElementById('tc-dolar').value) || 0;
-
-        // Convertir todo lo de P1 a Pesos
-        const p1EnPesos = sumasGlobales.P1.PESOS + (sumasGlobales.P1.REALES * tcR) + (sumasGlobales.P1.DOLARES * tcD);
-        // Convertir todo lo de P2 a Pesos
-        const p2EnPesos = sumasGlobales.P2.PESOS + (sumasGlobales.P2.REALES * tcR) + (sumasGlobales.P2.DOLARES * tcD);
-
-        const totalGral = p1EnPesos + p2EnPesos;
-        const difFinal = p1EnPesos - (totalGral / 2);
-
-        document.getElementById('detalles-conversion').innerHTML = `
-            <b>Saldos totales (convertidos):</b><br>
-            P1: $ ${p1EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})}<br>
-            P2: $ ${p2EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})}
-        `;
-
+        const tcR = parseFloat(document.getElementById('tc-real').value);
+        const tcD = parseFloat(document.getElementById('tc-dolar').value);
         const vf = document.getElementById('veredicto-final-pesos');
-        if(totalGral === 0) {
-            vf.innerText = "Esperando datos...";
-        } else {
-            vf.innerHTML = difFinal > 0 ? 
-                `<small>DEUDA FINAL EN PESOS:</small><br>PAREJA 2 PAGA A PAREJA 1<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>` : 
-                `<small>DEUDA FINAL EN PESOS:</small><br>PAREJA 1 PAGA A PAREJA 2<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>`;
+        const det = document.getElementById('detalles-conversion');
+
+        if(isNaN(tcR) || isNaN(tcD)) {
+            vf.innerText = "Ingresa los tipos de cambio...";
+            det.innerHTML = "";
+            return;
         }
+
+        const p1EnPesos = sumasGlobales.P1.PESOS + (sumasGlobales.P1.REALES * tcR) + (sumasGlobales.P1.DOLARES * tcD);
+        const p2EnPesos = sumasGlobales.P2.PESOS + (sumasGlobales.P2.REALES * tcR) + (sumasGlobales.P2.DOLARES * tcD);
+        const totalGral = p1EnPesos + p2EnPesos, difFinal = p1EnPesos - (totalGral / 2);
+
+        det.innerHTML = `P1: $ ${p1EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})} | P2: $ ${p2EnPesos.toLocaleString('es-UY', {maximumFractionDigits:0})}`;
+        vf.innerHTML = totalGral === 0 ? "Esperando datos..." : 
+            (difFinal > 0 ? `<small>DEUDA FINAL:</small><br>PAREJA 2 ADEUDA A PAREJA 1<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>` : 
+            `<small>DEUDA FINAL:</small><br>PAREJA 1 ADEUDA A PAREJA 2<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>`);
     }
 
     function simbolo(m) { return m === 'REALES' ? 'R$' : m === 'PESOS' ? '$' : 'U$S'; }

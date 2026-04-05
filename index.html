@@ -8,12 +8,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
     <style>
-        :root { --bg: #f8fafc; --header-h: 60px; --accent: #16a34a; --pareja-bg: #fdf2f8; --pareja-accent: #db2777; }
+        :root { --bg: #f8fafc; --header-h: 70px; --accent: #16a34a; --pareja-bg: #fdf2f8; --pareja-accent: #db2777; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-top: calc(var(--header-h) + 20px); color: #334155; }
         
         .tabs { position: fixed; top: 0; width: 100%; background: #0f172a; display: flex; height: var(--header-h); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; }
-        .tab-btn { flex: 1; border: none; background: none; font-size: 14px; font-weight: 900; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; padding: 0 5px; transition: 0.2s;}
-        .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 5px solid #fbbf24; font-size: 15px; }
+        .tab-btn { flex: 1; border: none; background: none; font-size: 13px; font-weight: 900; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; padding: 0 5px; transition: 0.2s;}
+        .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 5px solid #fbbf24; font-size: 14px; }
         .tab-btn-pareja { color: #fbcfe8; border-left: 1px solid #334155;}
         .tab-btn-pareja.active { color: #f472b6; border-bottom-color: #f472b6; background: #4c1d95; }
         
@@ -69,10 +69,10 @@
 <body>
 
 <nav class="tabs">
-    <button class="tab-btn active" onclick="showTab('CARGAR_GRUPO', this)">NUEVO</button>
-    <button class="tab-btn" onclick="showTab('HISTORIAL_GRUPO', this)">HISTORIAL</button>
-    <button class="tab-btn" onclick="showTab('BALANCE_GRUPO', this)">BALANCE</button>
-    <button class="tab-btn tab-btn-pareja" onclick="showTab('PAREJA_INTERNO', this)">J & T</button>
+    <button class="tab-btn active" onclick="showTab('CARGAR_GRUPO', this)">GRUPO<br><small>Nuevo</small></button>
+    <button class="tab-btn" onclick="showTab('HISTORIAL_GRUPO', this)">GRUPO<br><small>Lista</small></button>
+    <button class="tab-btn" onclick="showTab('BALANCE_GRUPO', this)">GRUPO<br><small>Balance</small></button>
+    <button class="tab-btn tab-btn-pareja" onclick="showTab('PAREJA_INTERNO', this)">J & T<br><small>Interno</small></button>
 </nav>
 
 <!-- ========================================== -->
@@ -101,12 +101,10 @@
         <input type="number" id="monto" inputmode="decimal" placeholder="0.00">
         <label>Rubro</label>
         <select id="rubro" onchange="checkOtro(this)">
-            <option value="COMIDA FUERA">Comida fuera</option>
-            <option value="SUPER">Super</option>
-            <option value="BEBIDAS">Bebidas</option>
-            <option value="ALOJAMIENTO">Alojamiento</option>
-            <option value="NAFTA">Nafta</option>
-            <option value="PEAJES">Peajes</option>
+            <option value="SUPER">Supermercado</option>
+            <option value="COMIDA FUERA">Restaurante / Comida</option>
+            <option value="PLAYA">Playa / Bebidas</option>
+            <option value="AUTO">Nafta / Peajes / Taller</option>
             <option value="VARIOS">Varios (Otro)</option>
         </select>
         <input type="text" id="rubro-otro" placeholder="¿Qué gasto fue?" style="display:none; margin-top: 10px;">
@@ -119,6 +117,10 @@
 <!-- ========================================== -->
 <div id="HISTORIAL_GRUPO" class="container">
     <h2>HISTORIAL GRUPAL</h2>
+    
+    <!-- Nuevo botón para descargar Excel -->
+    <button class="btn-save" style="background-color: #2563eb; box-shadow: 0 5px 0 #1e40af; margin-bottom: 20px; font-size: 16px; padding: 15px;" onclick="exportarExcel()">📊 DESCARGAR EXCEL PARA PRESENTAR</button>
+
     <div class="card" style="padding:15px">
         <label style="font-size:14px; color:#1e293b">RESUMEN POR RUBRO</label>
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:#f1f5f9; padding:10px; border-radius:10px;">
@@ -226,7 +228,7 @@
 </div>
 
 <script>
-    // Configuración Firebase
+    // Configuración Firebase (La de siempre)
     const firebaseConfig = {
       apiKey: "AIzaSyBDlHjKXf33pCEznyLAmFrTDXVPevrHe9Q",
       authDomain: "gastoscasa-d8bc2.firebaseapp.com",
@@ -240,9 +242,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // NODOS CONECTADOS
-    const NODO_GRUPO = 'viaje_brasil_2026';       // Base de datos original
-    const NODO_PAREJA = 'brasil_2026_interno';    // Caja chica
+    // ==========================================
+    // LOS DOS NODOS CONECTADOS (CORREGIDOS)
+    // ==========================================
+    const NODO_GRUPO = 'viaje_brasil_2026';       // ¡Este es el original correcto!
+    const NODO_PAREJA = 'brasil_2026_interno';    // La caja chica paralela
 
     const GRUPO_1 = ["JUAN", "TANIA"];
     let todosLosGastosGrupo = [];
@@ -432,7 +436,7 @@
 
     function borrarPareja(id) { if(confirm("¿Borrar gasto de J&T?")) db.ref(`${NODO_PAREJA}/${id}`).remove().then(()=>cargarPantallaPareja()); }
 
-    // --- LA FUNCIÓN MAESTRA ---
+    // --- LA FUNCIÓN MAESTRA CORREGIDA ---
     function liquidarParejaUnificado() {
         const tc = parseFloat(document.getElementById('tc-pareja').value);
         const veredictoDiv = document.getElementById('veredicto-pareja');
@@ -452,7 +456,7 @@
             const snapGrupo = snapshots[0];
             const snapPareja = snapshots[1];
 
-            // 1. MATEMÁTICA DEL GRUPO (Splitwise)
+            // 1. MATEMÁTICA DEL GRUPO CORREGIDA (Base = Splitwise)
             let juanPagoParaGrupo = 0;
             let taniaPagoParaGrupo = 0;
 
@@ -465,6 +469,8 @@
                 }
             });
 
+            // Lo que le corresponde a Juan y Tania INDIVIDUALMENTE de los gastos del grupo
+            // es la mitad de lo que le corresponde a la Pareja 1.
             const aportesDeAmbasParejasAlGrupo = juanPagoParaGrupo + taniaPagoParaGrupo; 
             const pesoIndividualDelGrupo = aportesDeAmbasParejasAlGrupo / 2;
             

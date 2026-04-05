@@ -239,10 +239,10 @@
     const db = firebase.database();
     
     // ==========================================
-    // LOS DOS NODOS CONECTADOS
+    // LOS DOS NODOS CONECTADOS (CORREGIDOS)
     // ==========================================
-    const NODO_GRUPO = 'brasil_2026_v2';       // Tu base actual de los 4
-    const NODO_PAREJA = 'brasil_2026_interno'; // La caja chica paralela
+    const NODO_GRUPO = 'viaje_brasil_2026';       // ¡Este es el original correcto!
+    const NODO_PAREJA = 'brasil_2026_interno';    // La caja chica paralela
 
     const GRUPO_1 = ["JUAN", "TANIA"];
     let todosLosGastosGrupo = [];
@@ -468,9 +468,6 @@
             // Lo que le corresponde a Juan y Tania INDIVIDUALMENTE de los gastos del grupo
             // es la mitad de lo que le corresponde a la Pareja 1.
             const aportesDeAmbasParejasAlGrupo = juanPagoParaGrupo + taniaPagoParaGrupo; 
-            // ^ Esto es solo lo que P1 desembolsó. Para el cálculo interno, asumimos que 
-            // la Pareja 1 pagará lo que le corresponde (la mitad del gasto total de los 4).
-            // Por lo tanto, el "peso" individual dentro del matrimonio es la mitad de ese aporte.
             const pesoIndividualDelGrupo = aportesDeAmbasParejasAlGrupo / 2;
             
             const juanTieneAFavorDelGrupo = juanPagoParaGrupo - pesoIndividualDelGrupo;
@@ -531,4 +528,3 @@
 </script>
 </body>
 </html>
-

@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,56 +9,76 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
     <style>
-        :root { --p1-color: #0284c7; --p2-color: #e11d48; --bg: #f8fafc; --header-h: 100px; --accent: #16a34a; }
+        :root { --p1-color: #0284c7; --p2-color: #e11d48; --bg: #f8fafc; --header-h: 70px; --accent: #16a34a; --pareja-bg: #fdf2f8; --pareja-accent: #db2777; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-top: calc(var(--header-h) + 20px); color: #334155; }
         
-        /* Pestañas con texto extra grande y sin íconos */
         .tabs { position: fixed; top: 0; width: 100%; background: #0f172a; display: flex; height: var(--header-h); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; }
-        .tab-btn { flex: 1; border: none; background: none; font-size: 18px; font-weight: 900; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; padding: 0 5px; }
-        .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 8px solid #fbbf24; font-size: 19px; }
+        .tab-btn { flex: 1; border: none; background: none; font-size: 14px; font-weight: 900; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; padding: 0 5px; transition: 0.2s;}
+        .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 5px solid #fbbf24; font-size: 15px; }
+        .tab-btn-pareja { color: #fbcfe8; }
+        .tab-btn-pareja.active { color: #f472b6; border-bottom-color: #f472b6; }
         
         .container { padding: 15px; display: none; max-width: 600px; margin: auto; }
         .container.active { display: block; }
 
         .card { background: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        h2 { font-size: 26px; font-weight: 900; margin-top: 0; color: #1e293b; text-transform: uppercase; border-bottom: 4px solid #fbbf24; display: inline-block; margin-bottom: 20px; }
+        .card-pareja { background: var(--pareja-bg); border-color: #fbcfe8; }
+        h2 { font-size: 22px; font-weight: 900; margin-top: 0; color: #1e293b; text-transform: uppercase; border-bottom: 4px solid #fbbf24; display: inline-block; margin-bottom: 20px; }
+        h2.titulo-pareja { color: var(--pareja-accent); border-color: var(--pareja-accent); }
         
-        label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 800; color: #475569; text-transform: uppercase; }
-        select, input { width: 100%; padding: 18px; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 20px; box-sizing: border-box; color: #000; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 800; color: #475569; text-transform: uppercase; }
+        select, input { width: 100%; padding: 16px; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; box-sizing: border-box; color: #000; background: #fff;}
+        select:focus, input:focus { border-color: #fbbf24; outline: none; }
         
-        .btn-save { background: var(--accent); color: white; padding: 22px; border: none; border-radius: 15px; font-weight: 900; font-size: 22px; cursor: pointer; width: 100%; box-shadow: 0 5px 0 #15803d; }
+        .btn-save { background: var(--accent); color: white; padding: 20px; border: none; border-radius: 15px; font-weight: 900; font-size: 20px; cursor: pointer; width: 100%; box-shadow: 0 5px 0 #15803d; transition: 0.1s;}
+        .btn-save:active { transform: translateY(5px); box-shadow: none; }
+        .btn-save-pareja { background: var(--pareja-accent); box-shadow: 0 5px 0 #9f1239; }
         
-        .seccion-titulo { background: #334155; color: white; padding: 12px 15px; border-radius: 10px; font-size: 18px; font-weight: 800; margin: 25px 0 15px 0; text-align: center; }
-        .historial-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 17px; }
+        .seccion-titulo { background: #334155; color: white; padding: 12px 15px; border-radius: 10px; font-size: 16px; font-weight: 800; margin: 25px 0 15px 0; text-align: center; }
+        .historial-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
 
-        .reporte-tabla { width: 100%; border-collapse: collapse; font-size: 15px; }
+        .reporte-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
         .reporte-tabla th { text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 12px; }
         .reporte-tabla td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; }
         .resaltado-pesos { color: #16a34a; font-weight: 800; }
         
         .balance-card { text-align: center; padding: 25px; background: #1e293b; color: white; border-radius: 20px; margin-bottom: 20px; }
-        .parejas-arriba { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 22px; font-weight: 900; color: #fbbf24; }
-        .parejas-arriba small { font-size: 13px; color: #94a3b8; display: block; text-transform: uppercase; }
-        .monto-abajo { font-size: 42px; font-weight: 900; border-top: 1px solid #475569; padding-top: 15px; }
+        .parejas-arriba { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 20px; font-weight: 900; color: #fbbf24; }
+        .parejas-arriba small { font-size: 12px; color: #94a3b8; display: block; text-transform: uppercase; }
+        .monto-abajo { font-size: 36px; font-weight: 900; border-top: 1px solid #475569; padding-top: 15px; }
 
-        .resultado-final { padding: 20px; border-radius: 15px; font-weight: 900; text-align: center; font-size: 20px; border: 3px solid transparent; margin-bottom: 10px; }
+        .resultado-final { padding: 20px; border-radius: 15px; font-weight: 900; text-align: center; font-size: 18px; border: 3px solid transparent; margin-bottom: 10px; }
         .gana-p1 { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
         .gana-p2 { background: #ffe4e6; color: #9f1239; border-color: #f43f5e; }
 
-        .liquidador-box { background: #fdf2f8; border: 2px solid #f472b6; border-radius: 20px; padding: 20px; margin-top: 30px; }
-        .input-cambio { background: #fff; border: 2px solid #cbd5e1; font-weight: bold; text-align: center; font-size: 22px; }
+        .liquidador-box { background: #fdf2f8; border: 2px solid #f472b6; border-radius: 20px; padding: 20px; margin-top: 20px; }
+        .input-cambio { background: #fff; border: 2px solid #cbd5e1; font-weight: bold; text-align: center; font-size: 20px; color: #be185d;}
+        
+        /* Estilos Pestaña Pareja */
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; display: inline-block; margin-bottom:5px;}
+        .badge-mitad { background: #8b5cf6; }
+        .badge-juan { background: #2563eb; }
+        .badge-tania { background: #db2777; }
+        .resumen-saldo-pareja { font-size: 20px; font-weight: 900; margin: 15px 0; padding: 15px; border-radius: 10px; border: 2px dashed; text-align: center;}
+        .gana-juan { color: #2563eb; border-color: #2563eb; background: #eff6ff; }
+        .gana-tania { color: #db2777; border-color: #db2777; background: #fdf2f8; }
+        .empate { color: #475569; border-color: #cbd5e1; background: #f1f5f9; }
     </style>
 </head>
 <body>
 
 <nav class="tabs">
-    <button class="tab-btn active" onclick="showTab('CARGAR', this)">NUEVO GASTO</button>
-    <button class="tab-btn" onclick="showTab('HISTORIAL', this)">HISTORIAL</button>
-    <button class="tab-btn" onclick="showTab('BALANCE', this)">BALANCE FINAL</button>
+    <button class="tab-btn active" onclick="showTab('CARGAR', this)">GRUPO<br><small>Nuevo</small></button>
+    <button class="tab-btn" onclick="showTab('HISTORIAL', this)">GRUPO<br><small>Listado</small></button>
+    <button class="tab-btn" onclick="showTab('BALANCE', this)">GRUPO<br><small>Balance</small></button>
+    <button class="tab-btn tab-btn-pareja" onclick="showTab('PAREJA', this)">J & T<br><small>Interno</small></button>
 </nav>
 
+<!-- ========================================== -->
+<!-- 1. MÓDULO ORIGINAL: GASTOS DE LOS 4        -->
+<!-- ========================================== -->
 <div id="CARGAR" class="container active">
-    <h2>NUEVO GASTO</h2>
+    <h2>NUEVO GASTO GRUPAL</h2>
     <div class="card">
         <label>¿Quién Pagó?</label>
         <select id="pagador">
@@ -88,14 +109,14 @@
             <option value="VARIOS">Varios (Otro)</option>
         </select>
         <input type="text" id="rubro-otro" placeholder="¿Qué gasto fue?" style="display:none; margin-top: 10px;">
-        <button class="btn-save" onclick="guardarGasto()">💾 GUARDAR GASTO</button>
+        <button class="btn-save" onclick="guardarGasto()">💾 GUARDAR GASTO 4</button>
     </div>
 </div>
 
 <div id="HISTORIAL" class="container">
-    <h2>HISTORIAL</h2>
+    <h2>HISTORIAL GRUPAL</h2>
     <div class="card" style="padding:15px">
-        <label style="font-size:16px; color:#1e293b">REPORTE POR RUBRO</label>
+        <label style="font-size:14px; color:#1e293b">REPORTE POR RUBRO</label>
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:#f1f5f9; padding:10px; border-radius:10px;">
             <small style="font-weight:bold; font-size:11px;">TIPO CAMBIO:</small>
             <input type="number" id="tc-reporte" placeholder="Ej: 8.5" style="margin:0; padding:8px; font-size:16px;" oninput="generarReporteRubros()">
@@ -111,7 +132,7 @@
 </div>
 
 <div id="BALANCE" class="container">
-    <h2>BALANCE FINAL</h2>
+    <h2>BALANCE GRUPAL (LOS 4)</h2>
     <div class="card" style="background: #f1f5f9; padding: 15px;">
         <label>REVISAR MONEDA INDIVIDUAL:</label>
         <select id="moneda-balance" onchange="calcularBalance()" style="margin-bottom:0">
@@ -121,7 +142,7 @@
     </div>
     <div class="card">
         <label>Gastos por persona:</label>
-        <div id="detalle-individual" style="font-size: 20px;"></div>
+        <div id="detalle-individual" style="font-size: 18px;"></div>
     </div>
     <div class="balance-card">
         <div class="parejas-arriba">
@@ -132,17 +153,71 @@
     </div>
     <div id="veredicto" class="resultado-final"></div>
     <div class="liquidador-box">
-        <h3 style="margin-top:0; color:#be185d; text-align:center; font-size:20px;">💰 CIERRE TOTAL (PESOS)</h3>
+        <h3 style="margin-top:0; color:#be185d; text-align:center; font-size:18px;">💰 CIERRE TOTAL GRUPO (PESOS)</h3>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <label style="margin:0">COTIZACIÓN REAL:</label>
-            <input type="number" id="tc-real" class="input-cambio" placeholder="0.00" style="width:130px; margin:0; border-color:#f472b6; color:#be185d" oninput="liquidarTodo()">
+            <input type="number" id="tc-real" class="input-cambio" placeholder="0.00" style="width:130px; margin:0;" oninput="liquidarTodo()">
         </div>
-        <div id="detalles-conversion" style="font-size:16px; border-top:1px dashed #f472b6; padding-top:10px; margin-bottom:15px; text-align:center;"></div>
-        <div id="veredicto-final-pesos" class="resultado-final" style="background:#fff; border-color:#be185d; color:#be185d; font-size:24px;">Ingresa cotización...</div>
+        <div id="detalles-conversion" style="font-size:14px; border-top:1px dashed #f472b6; padding-top:10px; margin-bottom:15px; text-align:center;"></div>
+        <div id="veredicto-final-pesos" class="resultado-final" style="background:#fff; border-color:#be185d; color:#be185d; font-size:20px;">Ingresa cotización...</div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 2. MÓDULO NUEVO: CAJA CHICA JUAN & TANIA   -->
+<!-- ========================================== -->
+<div id="PAREJA" class="container">
+    <h2 class="titulo-pareja">CAJA INTERNA (SOLO J&T)</h2>
+    
+    <div class="card card-pareja">
+        <label>¿Quién sacó la plata?</label>
+        <select id="pagador-pareja" style="border-color: #f472b6;">
+            <option value="JUAN">Juan pagó</option>
+            <option value="TANIA">Tania pagó</option>
+        </select>
+
+        <label>¿A quién le correspondía?</label>
+        <select id="beneficiario-pareja" style="background-color: #fffbe8; border-color: #fbbf24;">
+            <option value="AMBOS">A medias (Ej: Cena juntos solos)</option>
+            <option value="JUAN">Gasto 100% de Juan (Ej: Ropa de él)</option>
+            <option value="TANIA">Gasto 100% de Tania (Ej: Ropa de ella)</option>
+        </select>
+
+        <label>Moneda</label>
+        <select id="moneda-pareja">
+            <option value="REALES">REALES (R$)</option>
+            <option value="PESOS">PESOS ($)</option>
+        </select>
+
+        <label>Monto</label>
+        <input type="number" id="monto-pareja" inputmode="decimal" placeholder="0.00">
+        
+        <label>Detalle / Concepto</label>
+        <input type="text" id="detalle-pareja" placeholder="Ej: Protector solar">
+        
+        <button class="btn-save btn-save-pareja" onclick="guardarGastoPareja()">💾 REGISTRAR GASTO J&T</button>
+    </div>
+
+    <!-- Balance Pareja -->
+    <div class="card card-pareja">
+        <label style="color: #9f1239; text-align: center; margin-bottom: 10px;">BALANCE INTERNO EN PESOS:</label>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <span style="font-size: 14px; font-weight: bold;">Cotización Real:</span>
+            <input type="number" id="tc-pareja" placeholder="8.50" style="width: 100px; margin: 0; padding: 8px; text-align: center;" oninput="liquidarPareja()">
+        </div>
+        
+        <div id="veredicto-pareja" class="resumen-saldo-pareja empate">
+            Ingresa cotización
+        </div>
+        
+        <hr style="border-top:1px dashed #fbcfe8; margin: 20px 0;">
+        <label style="color: #9f1239; text-align: center; margin-bottom: 15px;">ÚLTIMOS MOVIMIENTOS J&T</label>
+        <div id="lista-pareja"></div>
     </div>
 </div>
 
 <script>
+    // Configuración Firebase Original
     const firebaseConfig = {
       apiKey: "AIzaSyBDlHjKXf33pCEznyLAmFrTDXVPevrHe9Q",
       authDomain: "gastoscasa-d8bc2.firebaseapp.com",
@@ -155,22 +230,32 @@
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    
+    // NODOS DE BASE DE DATOS
+    const NODO_GRUPO = 'viaje_brasil_2026';   // El original de los 4
+    const NODO_PAREJA = 'brasil_2026_interno'; // El nuevo exclusivo
+
     const GRUPO_1 = ["JUAN", "TANIA"];
     const GRUPO_2 = ["ROSARIO", "RICHARD"];
-
     let todosLosGastos = [];
     let sumasGlobales = { P1: { REALES: 0, PESOS: 0 }, P2: { REALES: 0, PESOS: 0 } };
 
+    // Navegación
     function showTab(id, btn) {
         document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         btn.classList.add('active');
+        
         if(id === 'HISTORIAL') cargarHistorial();
         if(id === 'BALANCE') calcularBalance();
+        if(id === 'PAREJA') cargarHistorialPareja();
         window.scrollTo(0,0);
     }
 
+    // ==========================================
+    // LÓGICA GRUPO (ORIGINAL INTACTA)
+    // ==========================================
     function checkOtro(s) { document.getElementById('rubro-otro').style.display = s.value === 'VARIOS' ? 'block' : 'none'; }
 
     function guardarGasto() {
@@ -180,15 +265,15 @@
         let rubro = document.getElementById('rubro').value;
         if(rubro === 'VARIOS' && document.getElementById('rubro-otro').value !== "") rubro = "VAR: " + document.getElementById('rubro-otro').value;
         if (!monto || monto <= 0) return alert("Monto inválido");
-        db.ref('viaje_brasil_2026').push({
+        db.ref(NODO_GRUPO).push({
             pagador, moneda, monto, rubro,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             fecha: new Date().toLocaleDateString('es-UY')
-        }).then(() => { alert("✅ Guardado"); document.getElementById('monto').value = ""; });
+        }).then(() => { alert("✅ Guardado en GRUPO"); document.getElementById('monto').value = ""; });
     }
 
     function cargarHistorial() {
-        db.ref('viaje_brasil_2026').once('value', s => {
+        db.ref(NODO_GRUPO).once('value', s => {
             const gastos = { REALES: [], PESOS: [] };
             todosLosGastos = [];
             s.forEach(c => {
@@ -200,12 +285,12 @@
             let html = "";
             ["REALES", "PESOS"].forEach(m => {
                 if(gastos[m].length > 0) {
-                    html += `<div class="seccion-titulo">GASTOS EN ${m}</div>`;
+                    html += `<div class="seccion-titulo">GASTOS GRUPO EN ${m}</div>`;
                     gastos[m].reverse().forEach(g => {
                         html += `<div class="card historial-item">
-                            <div><small>${g.fecha}</small><br><b style="font-size:18px">${g.rubro}</b><br><small>Pagó: ${g.pagador}</small></div>
+                            <div><small>${g.fecha}</small><br><b style="font-size:16px">${g.rubro}</b><br><small>Pagó: ${g.pagador}</small></div>
                             <div style="text-align:right"><b>${m === 'REALES' ? 'R$' : '$'} ${g.monto}</b><br>
-                            <button onclick="borrar('${g.id}')" style="color:#e11d48; border:1px solid #e11d48; background:none; font-size:11px; padding:4px; border-radius:5px; margin-top:5px;">ELIMINAR</button></div>
+                            <button onclick="borrarGrupo('${g.id}')" style="color:#e11d48; border:1px solid #e11d48; background:none; font-size:11px; padding:4px; border-radius:5px; margin-top:5px;">BORRAR</button></div>
                         </div>`;
                     });
                 }
@@ -231,11 +316,11 @@
         document.getElementById('body-reporte').innerHTML = html || "<tr><td colspan='4'>No hay datos</td></tr>";
     }
 
-    function borrar(id) { if(confirm("¿Borrar?")) db.ref(`viaje_brasil_2026/${id}`).remove().then(()=>cargarHistorial()); }
+    function borrarGrupo(id) { if(confirm("¿Borrar gasto grupal?")) db.ref(`${NODO_GRUPO}/${id}`).remove().then(()=>cargarHistorial()); }
 
     function calcularBalance() {
         const monSel = document.getElementById('moneda-balance').value;
-        db.ref('viaje_brasil_2026').once('value', s => {
+        db.ref(NODO_GRUPO).once('value', s => {
             sumasGlobales = { P1: { REALES: 0, PESOS: 0 }, P2: { REALES: 0, PESOS: 0 } };
             let ind = {JUAN:0, TANIA:0, ROSARIO:0, RICHARD:0};
             s.forEach(c => {
@@ -250,7 +335,7 @@
             document.getElementById('total-p2').innerText = `${sim} ${tP2.toLocaleString('es-UY')}`;
             const v = document.getElementById('veredicto');
             v.className = "resultado-final " + (dif > 0 ? "gana-p1" : "gana-p2");
-            v.innerHTML = total === 0 ? "Sin gastos" : (dif > 0 ? `LA PAREJA 2 ADEUDA<br><span style="font-size:28px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 1` : `LA PAREJA 1 ADEUDA<br><span style="font-size:28px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span><br>A LA PAREJA 2`);
+            v.innerHTML = total === 0 ? "Sin gastos" : (dif > 0 ? `P2 ADEUDA A P1<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span>` : `P1 ADEUDA A P2<br><span style="font-size:24px">${sim} ${Math.abs(dif).toLocaleString('es-UY')}</span>`);
             let hInd = "";
             for(let p in ind) hInd += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>${p}:</span> <b>${sim} ${ind[p].toLocaleString('es-UY')}</b></div>`;
             document.getElementById('detalle-individual').innerHTML = hInd;
@@ -267,8 +352,111 @@
         const p2Total = sumasGlobales.P2.PESOS + (sumasGlobales.P2.REALES * tcR);
         const totalGral = p1Total + p2Total, difFinal = p1Total - (totalGral / 2);
         det.innerHTML = `P1: $ ${p1Total.toLocaleString('es-UY', {maximumFractionDigits:0})} | P2: $ ${p2Total.toLocaleString('es-UY', {maximumFractionDigits:0})}`;
-        vf.innerHTML = totalGral === 0 ? "Esperando datos..." : (difFinal > 0 ? `<small>DEUDA FINAL:</small><br>PAREJA 2 ADEUDA A PAREJA 1<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>` : `<small>DEUDA FINAL:</small><br>PAREJA 1 ADEUDA A PAREJA 2<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>`);
+        vf.innerHTML = totalGral === 0 ? "Esperando datos..." : (difFinal > 0 ? `<small>DEUDA FINAL GRUPO:</small><br>P2 ADEUDA A P1<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>` : `<small>DEUDA FINAL GRUPO:</small><br>P1 ADEUDA A P2<br><b>$ ${Math.abs(difFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}</b>`);
+    }
+
+    // ==========================================
+    // LÓGICA PAREJA J&T (NUEVA)
+    // ==========================================
+    function guardarGastoPareja() {
+        const pagador = document.getElementById('pagador-pareja').value;
+        const beneficiario = document.getElementById('beneficiario-pareja').value;
+        const moneda = document.getElementById('moneda-pareja').value;
+        const monto = parseFloat(document.getElementById('monto-pareja').value);
+        let detalle = document.getElementById('detalle-pareja').value.trim();
+        
+        if (!monto || monto <= 0) return alert("Monto inválido");
+        if (!detalle) detalle = "Gasto interno";
+        
+        db.ref(NODO_PAREJA).push({
+            pagador, beneficiario, moneda, monto, detalle,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            fecha: new Date().toLocaleDateString('es-UY')
+        }).then(() => { 
+            alert("✅ Movimiento de pareja registrado"); 
+            document.getElementById('monto-pareja').value = ""; 
+            document.getElementById('detalle-pareja').value = ""; 
+            cargarHistorialPareja();
+        });
+    }
+
+    function cargarHistorialPareja() {
+        db.ref(NODO_PAREJA).orderByChild('timestamp').once('value', s => {
+            let html = "";
+            let movs = [];
+            s.forEach(c => { let g = c.val(); g.id = c.key; movs.push(g); });
+            
+            if(movs.length === 0) {
+                document.getElementById('lista-pareja').innerHTML = "<p style='text-align:center;font-size:14px;'>Sin gastos de pareja.</p>";
+            } else {
+                movs.reverse().forEach(g => {
+                    let bCls = g.beneficiario === 'AMBOS' ? 'badge-mitad' : (g.beneficiario === 'JUAN' ? 'badge-juan' : 'badge-tania');
+                    let bTxt = g.beneficiario === 'AMBOS' ? 'A MEDIAS' : `PARA ${g.beneficiario}`;
+                    let sim = g.moneda === 'REALES' ? 'R$' : '$';
+                    html += `
+                    <div style="font-size:14px; border-bottom:1px solid #f1f5f9; padding:10px 0; display:flex; justify-content:space-between;">
+                        <div style="width:70%">
+                            <span class="badge ${bCls}">${bTxt}</span><br>
+                            <b>${g.detalle}</b><br><small style="color:#64748b">Pagó: ${g.pagador}</small>
+                        </div>
+                        <div style="text-align:right">
+                            <b>${sim} ${g.monto}</b><br>
+                            <button onclick="borrarPareja('${g.id}')" style="color:#e11d48; border:none; background:none; font-size:11px; margin-top:5px; text-decoration:underline; cursor:pointer; padding:0;">Borrar</button>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('lista-pareja').innerHTML = html;
+            }
+            liquidarPareja();
+        });
+    }
+
+    function borrarPareja(id) { if(confirm("¿Borrar movimiento de pareja?")) db.ref(`${NODO_PAREJA}/${id}`).remove().then(()=>cargarHistorialPareja()); }
+
+    function liquidarPareja() {
+        const tc = parseFloat(document.getElementById('tc-pareja').value);
+        const veredictoDiv = document.getElementById('veredicto-pareja');
+        
+        if(isNaN(tc) || tc <= 0) {
+            veredictoDiv.className = "resumen-saldo-pareja empate";
+            veredictoDiv.innerHTML = "Ingresa cotización del R$";
+            return;
+        }
+
+        db.ref(NODO_PAREJA).once('value', s => {
+            let deudaJuanHaciaTania = 0; 
+            let deudaTaniaHaciaJuan = 0;
+
+            s.forEach(c => {
+                const g = c.val();
+                const montoPesos = g.moneda === 'REALES' ? (g.monto * tc) : g.monto;
+
+                if(g.pagador === 'JUAN') {
+                    if(g.beneficiario === 'AMBOS') deudaTaniaHaciaJuan += (montoPesos / 2); 
+                    if(g.beneficiario === 'TANIA') deudaTaniaHaciaJuan += montoPesos;       
+                } else if(g.pagador === 'TANIA') {
+                    if(g.beneficiario === 'AMBOS') deudaJuanHaciaTania += (montoPesos / 2); 
+                    if(g.beneficiario === 'JUAN') deudaJuanHaciaTania += montoPesos;        
+                }
+            });
+
+            const balanceFinal = deudaJuanHaciaTania - deudaTaniaHaciaJuan;
+
+            if(balanceFinal > 0) {
+                veredictoDiv.className = "resumen-saldo-pareja gana-tania";
+                veredictoDiv.innerHTML = `<small style="color:#475569;font-size:12px;display:block">RESULTADO:</small>JUAN DEBE A TANIA<br>$ ${balanceFinal.toLocaleString('es-UY', {maximumFractionDigits:0})}`;
+            } else if (balanceFinal < 0) {
+                veredictoDiv.className = "resumen-saldo-pareja gana-juan";
+                veredictoDiv.innerHTML = `<small style="color:#475569;font-size:12px;display:block">RESULTADO:</small>TANIA DEBE A JUAN<br>$ ${Math.abs(balanceFinal).toLocaleString('es-UY', {maximumFractionDigits:0})}`;
+            } else {
+                veredictoDiv.className = "resumen-saldo-pareja empate";
+                veredictoDiv.innerHTML = "ESTÁN HECHOS (Cero)";
+            }
+        });
     }
 </script>
 </body>
 </html>
+
+```
+

@@ -133,7 +133,7 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN FIREBASE ORIGINAL CORRECTA (Hardcodeada para que funcione en el celular)
+        // CONFIGURACIÓN FIREBASE 
         const firebaseConfig = {
             apiKey: "AIzaSyBDlHjKXf33pCEznyLAmFrTDXVPevrHe9Q",
             authDomain: "gastoscasa-d8bc2.firebaseapp.com",
@@ -171,7 +171,7 @@
 
         function checkOtro(v) { document.getElementById('g-otro').classList.toggle('hidden', v !== 'VARIOS'); }
 
-        // LISTENERS (Carga automática de datos)
+        // LISTENERS
         db.ref(NODO_GRUPO).on('value', snap => {
             const data = snap.val();
             GASTOS_G = data ? Object.entries(data).map(([id, val]) => ({id, ...val})) : [];
@@ -192,8 +192,7 @@
             const m = document.getElementById('g-monto').value;
             if(!m) return;
             const r = document.getElementById('g-rubro').value;
-            // Corrección ortográfica instantánea de Bidón al guardar
-            const rubroFinal = (r === 'VARIOS' ? "Var: " + document.getElementById('g-otro').value : r).replace(/Bid.n/gi, "Bidón");
+            const rubroFinal = (r === 'VARIOS' ? "VAR: " + document.getElementById('g-otro').value : r).replace(/Bid.n/gi, "Bidón");
             
             db.ref(NODO_GRUPO).push({
                 pagador: document.getElementById('g-pagador').value,
@@ -233,11 +232,14 @@
         function renderHistorial() {
             const list = document.getElementById('lista-gastos');
             const table = document.getElementById('tabla-resumen');
-            if(!list) return;
+            if(!list || !table) return;
 
             const tc = Number(document.getElementById('tc-historial').value) || 1;
+            
+            // AGRUPAMIENTO INTELIGENTE PARA LA TABLA DE ARRIBA (Todos los VAR: van a VARIOS)
             const resumen = GASTOS_G.reduce((acc, g) => {
-                const r = g.rubro.replace(/Bid.n/gi, "Bidón");
+                let r = g.rubro.replace(/Bid.n/gi, "Bidón");
+                if (r.toUpperCase().startsWith("VAR:")) r = "VARIOS"; // <-- Agrupación corregida
                 acc[r] = acc[r] || { R: 0, P: 0 };
                 if(g.moneda === 'REALES') acc[r].R += g.monto; else acc[r].P += g.monto;
                 return acc;
@@ -245,7 +247,7 @@
 
             table.innerHTML = `
                 <table class="w-full text-right">
-                    <thead><tr class="text-slate-400 font-black text-[9px] uppercase"><th class="text-left">RUBRO</th><th>R$</th><th>$</th></tr></thead>
+                    <thead><tr class="text-slate-400 font-black text-[10px] uppercase"><th class="text-left">RUBRO</th><th>R$</th><th>$</th></tr></thead>
                     <tbody>${Object.entries(resumen).sort().map(([r, v]) => `
                         <tr class="border-t border-slate-100"><td class="text-left py-2 font-bold">${r}</td><td>${v.R.toFixed(2)}</td><td>${v.P.toFixed(2)}</td></tr>
                     `).join('')}</tbody>
@@ -343,81 +345,62 @@
 
         function borrar(n, id) { if(confirm("¿Eliminar gasto?")) db.ref(n + '/' + id).remove(); }
 
-        // EXCEL EXPORT - SÚPER ROBUSTO
+        // ==========================================
+        // EXCEL EXPORT - MATEMÁTICA JS A PRUEBA DE FALLOS
+        // ==========================================
         function exportarExcelTotal() {
             if(GASTOS_G.length === 0) return alert("No hay datos para exportar");
             
-            // Ordenar por Rubro alfabéticamente, luego por Fecha
+            // Reemplazo cualquier acento en la palabra Bidón por "Bidon" para evitar caracteres raros en el archivo
+            const cleanText = (txt) => txt.replace(/Bid.n/gi, "Bidon");
+            const f = (n) => Number(n).toFixed(2).replace('.', ',');
+
             const sortFn = (a, b) => a.rubro.localeCompare(b.rubro) || a.timestamp - b.timestamp;
             const reales = GASTOS_G.filter(g => g.moneda === 'REALES').sort(sortFn);
             const pesos = GASTOS_G.filter(g => g.moneda === 'PESOS').sort(sortFn);
             
-            // Función para dar formato a los números (cambia punto por coma y añade dos decimales)
-            const f = (n) => Number(n).toFixed(2).replace('.', ',');
-
-            let rowIdx = 1; // Llevamos la cuenta exacta de la fila para las fórmulas
-
-            // \ufeff es el código necesario para que Excel lea los acentos (como la ó de Bidón) en un archivo CSV
-            let csv = "\ufeffRENDICION BRASIL 2026;;PAREJA 1;;PAREJA 2;\n"; rowIdx++;
-            csv += "GASTOS EN REALES;;JUAN;TANIA;RICHARD;ROSARIO\n"; rowIdx++;
+            // \ufeff ayuda a algunos Excel con codificación
+            let csv = "\ufeffRENDICION BRASIL 2026;;PAREJA 1;;PAREJA 2;\n";
             
-            // ==========================================
-            // BLOQUE REALES
-            // ==========================================
-            let startR = rowIdx;
+            // --- REALES ---
+            csv += "GASTOS EN REALES;;JUAN;TANIA;RICHARD;ROSARIO\n";
+            let sumRJ = 0, sumRT = 0, sumRRi = 0, sumRRo = 0;
             reales.forEach(g => {
-                const rub = g.rubro.replace(/Bid.n/gi, "Bidón");
-                csv += `${rub};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
-                rowIdx++;
+                if(g.pagador==='JUAN') sumRJ += g.monto; if(g.pagador==='TANIA') sumRT += g.monto;
+                if(g.pagador==='RICHARD') sumRRi += g.monto; if(g.pagador==='ROSARIO') sumRRo += g.monto;
+                csv += `${cleanText(g.rubro)};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
             });
-            let endR = rowIdx - 1;
-            
-            // SUMAS REALES - Si está vacío ponemos 0,00 para evitar error #NAME
-            let fReal = reales.length > 0 ? `=SUMA(C${startR}:C${endR})` : '0,00';
-            csv += `SUMAS REALES;;${reales.length>0?fReal:'0,00'};${reales.length>0?`=SUMA(D${startR}:D${endR})`:'0,00'};${reales.length>0?`=SUMA(E${startR}:E${endR})`:'0,00'};${reales.length>0?`=SUMA(F${startR}:F${endR})`:'0,00'}\n`;
-            let sumRealRow = rowIdx;
-            rowIdx++;
-            csv += "\n"; rowIdx++;
+            csv += `SUMAS REALES;;${f(sumRJ)};${f(sumRT)};${f(sumRRi)};${f(sumRRo)}\n\n`;
 
-            // ==========================================
-            // BLOQUE PESOS
-            // ==========================================
-            csv += "GASTOS EN PESOS;;JUAN;TANIA;RICHARD;ROSARIO\n"; rowIdx++;
-            let startP = rowIdx;
+            // --- PESOS ---
+            csv += "GASTOS EN PESOS;;JUAN;TANIA;RICHARD;ROSARIO\n";
+            let sumPJ = 0, sumPT = 0, sumPRi = 0, sumPRo = 0;
             pesos.forEach(g => {
-                const rub = g.rubro.replace(/Bid.n/gi, "Bidón");
-                csv += `${rub};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
-                rowIdx++;
+                if(g.pagador==='JUAN') sumPJ += g.monto; if(g.pagador==='TANIA') sumPT += g.monto;
+                if(g.pagador==='RICHARD') sumPRi += g.monto; if(g.pagador==='ROSARIO') sumPRo += g.monto;
+                csv += `${cleanText(g.rubro)};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
             });
-            let endP = rowIdx - 1;
-            
-            // SUMAS PESOS
-            let fPeso = pesos.length > 0 ? `=SUMA(C${startP}:C${endP})` : '0,00';
-            csv += `SUMAS PESOS;;${pesos.length>0?fPeso:'0,00'};${pesos.length>0?`=SUMA(D${startP}:D${endP})`:'0,00'};${pesos.length>0?`=SUMA(E${startP}:E${endP})`:'0,00'};${pesos.length>0?`=SUMA(F${startP}:F${endP})`:'0,00'}\n`;
-            let sumPesoRow = rowIdx;
-            rowIdx++;
-            csv += "\n"; rowIdx++;
+            csv += `SUMAS PESOS;;${f(sumPJ)};${f(sumPT)};${f(sumPRi)};${f(sumPRo)}\n\n`;
 
-            // ==========================================
-            // TOTALES Y BALANCE MATEMÁTICO
-            // ==========================================
-            csv += "TOTALES POR PERSONA;;JUAN;TANIA;RICHARD;ROSARIO\n"; rowIdx++;
-            csv += `REALES;;=C${sumRealRow};=D${sumRealRow};=E${sumRealRow};=F${sumRealRow}\n`; rowIdx++;
-            csv += `PESOS;;=C${sumPesoRow};=D${sumPesoRow};=E${sumPesoRow};=F${sumPesoRow}\n`; rowIdx++;
+            // --- TOTALES Y MATEMÁTICA ---
+            // Tomamos la cotización de la vista Historial
+            const tc = Number(document.getElementById('tc-historial').value) || 1;
             
-            // Esta celda C(tcRow) es donde vos ponés la cotización del real
-            csv += "TC REAL;;1,00;;;\n"; 
-            let tcRow = rowIdx; 
-            rowIdx++;
+            const totJ = (sumRJ * tc) + sumPJ;
+            const totT = (sumRT * tc) + sumPT;
+            const totRi = (sumRRi * tc) + sumPRi;
+            const totRo = (sumRRo * tc) + sumPRo;
             
-            csv += `TOTAL ($);;=(C${tcRow-2}*C${tcRow})+C${tcRow-1};=(D${tcRow-2}*C${tcRow})+D${tcRow-1};=(E${tcRow-2}*C${tcRow})+E${tcRow-1};=(F${tcRow-2}*C${tcRow})+F${tcRow-1}\n`; 
-            let totalRow = rowIdx; 
-            rowIdx++;
+            const balFinal = (totJ + totT) - (totRi + totRo);
+
+            csv += "TOTALES POR PERSONA;;JUAN;TANIA;RICHARD;ROSARIO\n";
+            csv += `TOTAL REALES;;${f(sumRJ)};${f(sumRT)};${f(sumRRi)};${f(sumRRo)}\n`;
+            csv += `TOTAL PESOS;;${f(sumPJ)};${f(sumPT)};${f(sumPRi)};${f(sumPRo)}\n`;
+            csv += `TC REAL USADO PARA CÁLCULO:;;${f(tc)};;;\n`;
+            csv += `TOTAL FINAL EN PESOS ($);;${f(totJ)};${f(totT)};${f(totRi)};${f(totRo)}\n\n`;
             
-            csv += "\n"; rowIdx++;
-            
-            // Fórmula final: Suma Juan + Tania y le resta Richard + Rosario
-            csv += `BALANCE PAREJAS;;=(C${totalRow}+D${totalRow})-(E${totalRow}+F${totalRow});;;\n`;
+            csv += `BALANCE PAREJAS ( P1 - P2 );;${f(balFinal)};;;\n`;
+            csv += `(Si es positivo P2 debe a P1. Si es negativo P1 debe a P2);;;;;\n`;
 
             // DESCARGA
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -431,4 +414,4 @@
         changeTab('GASTOS');
     </script>
 </body>
-    </html>
+                    </html>

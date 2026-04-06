@@ -3,291 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brasil 2026 - Control Total</title>
-    <!-- Tailwind para el diseño -->
+    <title>Brasil 2026 - Rendición</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase Legacy SDK para máxima compatibilidad en un solo archivo -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .tab-active { color: #fbbf24; background: #1e293b; border-bottom: 4px solid #fbbf24; }
-        .tab-pareja-active { color: #f472b6; background: #4c1d95; border-bottom: 4px solid #f472b6; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .tab-jyt-active { color: #f472b6; background: #4c1d95; border-bottom: 4px solid #f472b6; }
+        .number-excel { text-align: right; }
     </style>
 </head>
 <body class="bg-slate-50 pb-20">
 
     <!-- Navegación Superior -->
     <nav class="fixed top-0 w-full h-[70px] bg-slate-900 flex shadow-2xl z-50">
-        <button onclick="showTab('GASTOS')" id="btn-GASTOS" class="flex-1 text-[13px] font-black uppercase text-slate-400 transition-all">Gastos</button>
-        <button onclick="showTab('HISTORIAL')" id="btn-HISTORIAL" class="flex-1 text-[13px] font-black uppercase text-slate-400 transition-all">Historico</button>
-        <button onclick="showTab('BALANCE')" id="btn-BALANCE" class="flex-1 text-[13px] font-black uppercase text-slate-400 transition-all">Balance</button>
-        <button onclick="showTab('PAREJA')" id="btn-PAREJA" class="flex-1 text-[13px] font-black uppercase text-slate-400 border-l border-slate-800 transition-all">JyT</button>
+        <button onclick="changeTab('GASTOS')" id="btn-GASTOS" class="flex-1 text-[12px] font-black uppercase text-slate-400 transition-all">Gastos</button>
+        <button onclick="changeTab('HISTORIAL')" id="btn-HISTORIAL" class="flex-1 text-[12px] font-black uppercase text-slate-400 transition-all">Historico</button>
+        <button onclick="changeTab('BALANCE')" id="btn-BALANCE" class="flex-1 text-[12px] font-black uppercase text-slate-400 transition-all">Balance</button>
+        <button onclick="changeTab('PAREJA')" id="btn-PAREJA" class="flex-1 text-[12px] font-black uppercase text-slate-400 border-l border-slate-800 transition-all">JyT</button>
     </nav>
 
-    <div id="content" class="pt-[90px] px-4 max-w-lg mx-auto">
+    <div class="pt-[90px] px-4 max-w-lg mx-auto">
         
-        <!-- Pestaña GASTOS -->
-        <div id="section-GASTOS" class="tab-content">
-            <h2 class="text-xl font-black mb-6 border-b-4 border-amber-400 inline-block uppercase">Nuevo Gasto Grupo</h2>
+        <!-- SECCIÓN GASTOS -->
+        <div id="sec-GASTOS" class="tab-content">
+            <h2 class="text-xl font-black mb-6 border-b-4 border-amber-400 inline-block uppercase text-slate-800">Cargar Gasto Grupo</h2>
             <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
                 <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Quién Pagó</label>
-                <select id="g-pagador" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none">
+                <select id="g-pagador" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none border-none">
                     <option value="JUAN">Juan</option><option value="TANIA">Tania</option>
                     <option value="RICHARD">Richard</option><option value="ROSARIO">Rosario</option>
                 </select>
 
                 <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Moneda</label>
-                <select id="g-moneda" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none">
+                <select id="g-moneda" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none border-none">
                     <option value="REALES">REALES (R$)</option><option value="PESOS">PESOS ($)</option>
                 </select>
 
                 <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Monto</label>
-                <input type="number" id="g-monto" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none" placeholder="0,00">
+                <input type="number" id="g-monto" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none border-none" placeholder="0,00" inputmode="decimal">
 
                 <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Rubro</label>
-                <select id="g-rubro" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none" onchange="toggleOtro(this.value)">
+                <select id="g-rubro" class="w-full p-4 mb-4 bg-slate-50 rounded-2xl text-lg outline-none border-none" onchange="checkOtro(this.value)">
                     <option value="NAFTA">Nafta</option><option value="PEAJES">Peajes</option>
                     <option value="SUPER">Super</option><option value="COMIDA FUERA">Comida Fuera</option>
                     <option value="ALOJAMIENTO">Alojamiento</option><option value="BEBIDAS">Bebidas</option>
                     <option value="VARIOS">Otro</option>
                 </select>
-                <input type="text" id="g-otro" class="hidden w-full p-4 mb-4 border-2 border-amber-100 rounded-2xl" placeholder="¿Qué fue?">
+                <input type="text" id="g-otro" class="hidden w-full p-4 mb-4 border-2 border-amber-100 rounded-2xl" placeholder="¿Qué gasto fue?">
 
-                <button onclick="saveGastoGrupo()" class="w-full bg-emerald-600 text-white p-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#059669] active:translate-y-1 active:shadow-none">GUARDAR GASTO</button>
+                <button onclick="saveGrupo()" class="w-full bg-emerald-600 text-white p-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#059669] active:translate-y-1 active:shadow-none transition-all">GUARDAR GASTO</button>
             </div>
         </div>
 
-        <!-- Pestaña HISTORIAL -->
-        <div id="section-HISTORIAL" class="tab-content hidden">
-            <h2 class="text-xl font-black mb-6 border-b-4 border-amber-400 inline-block uppercase">Histórico</h2>
-            <button onclick="exportExcel()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black mb-6 shadow-[0_6px_0_#1d4ed8]">📊 GENERAR EXCEL GRUPO</button>
+        <!-- SECCIÓN HISTORICO -->
+        <div id="sec-HISTORIAL" class="tab-content hidden">
+            <h2 class="text-xl font-black mb-6 border-b-4 border-amber-400 inline-block uppercase text-slate-800">Histórico Grupal</h2>
+            <button onclick="exportarExcelTotal()" class="w-full bg-blue-600 text-white p-5 rounded-2xl font-black mb-6 shadow-[0_6px_0_#1d4ed8] flex items-center justify-center gap-2">
+                📊 DESCARGAR EXCEL RENDICIÓN
+            </button>
             
-            <div id="resumen-rubros" class="bg-white p-4 rounded-2xl border mb-6 text-sm">
-                <!-- Se llena por JS -->
-            </div>
-            <div id="lista-gastos-grupo" class="space-y-3">
-                <!-- Se llena por JS -->
-            </div>
-        </div>
-
-        <!-- Pestaña BALANCE -->
-        <div id="section-BALANCE" class="tab-content hidden text-center">
-            <h2 class="text-xl font-black mb-6 border-b-4 border-amber-400 inline-block uppercase">Balance Grupal</h2>
-            <select id="b-moneda" class="w-full p-4 mb-6 rounded-2xl font-bold bg-white border outline-none" onchange="updateBalanceGrupo()">
-                <option value="REALES">REALES (R$)</option><option value="PESOS">PESOS ($)</option>
-            </select>
-            <div class="bg-slate-900 text-white p-8 rounded-[3rem] mb-6 shadow-2xl">
-                <div class="flex justify-around mb-4 text-amber-400 font-bold">
-                    <div id="bal-p1"></div><div id="bal-p2"></div>
+            <div id="resumen-container" class="bg-white p-5 rounded-3xl border border-slate-200 mb-6 text-sm overflow-hidden shadow-sm">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="font-bold text-slate-400 uppercase text-[10px]">TC Reporte:</span>
+                    <input type="number" id="tc-historial" value="8.5" oninput="renderHistorial()" class="w-16 p-1 border rounded text-center font-bold">
                 </div>
-                <div id="bal-total" class="text-5xl font-black border-t border-slate-800 pt-6"></div>
+                <div id="tabla-resumen"></div>
             </div>
-            <div id="veredicto-grupo" class="p-6 rounded-3xl border-2 font-black text-lg"></div>
+
+            <div id="lista-gastos" class="space-y-3"></div>
         </div>
 
-        <!-- Pestaña JyT -->
-        <div id="section-PAREJA" class="tab-content hidden">
+        <!-- SECCIÓN BALANCE -->
+        <div id="sec-BALANCE" class="tab-content hidden text-center">
+            <h2 class="text-xl font-black mb-6 border-b-4 border-amber-400 inline-block uppercase text-slate-800">Balance Grupo de 4</h2>
+            <div class="bg-white p-4 rounded-2xl border mb-6">
+                <label class="text-[10px] font-black text-slate-400 uppercase block mb-2">Moneda del Balance</label>
+                <select id="bal-moneda-sel" onchange="renderBalance()" class="w-full p-3 bg-slate-50 rounded-xl font-bold outline-none">
+                    <option value="REALES">REALES (R$)</option><option value="PESOS">PESOS ($)</option>
+                </select>
+            </div>
+            
+            <div class="bg-slate-900 text-white p-8 rounded-[3rem] mb-6 shadow-2xl relative overflow-hidden">
+                <div class="flex justify-around mb-6">
+                    <div class="text-amber-400"><small class="block text-slate-500 font-bold uppercase text-[10px]">P1 (J+T)</small><p id="sum-p1" class="text-xl font-black"></p></div>
+                    <div class="text-amber-400"><small class="block text-slate-500 font-bold uppercase text-[10px]">P2 (R+R)</small><p id="sum-p2" class="text-xl font-black"></p></div>
+                </div>
+                <div id="sum-total" class="text-5xl font-black border-t border-slate-800 pt-6"></div>
+            </div>
+
+            <div id="veredicto-caja" class="p-6 rounded-3xl border-2 font-black text-lg"></div>
+        </div>
+
+        <!-- SECCIÓN JyT -->
+        <div id="sec-PAREJA" class="tab-content hidden">
             <h2 class="text-xl font-black mb-6 border-b-4 border-pink-500 text-pink-600 inline-block uppercase">Cuentas J & T</h2>
             <div class="bg-pink-50 p-6 rounded-[2.5rem] border border-pink-100 mb-8">
                 <label class="text-[10px] font-black text-pink-400 uppercase mb-1 block">Quién Pagó</label>
-                <select id="p-pagador" class="w-full p-4 mb-4 rounded-xl text-lg outline-none">
+                <select id="p-pagador" class="w-full p-4 mb-4 rounded-xl text-lg outline-none border-none">
                     <option value="JUAN">Juan</option><option value="TANIA">Tania</option>
                 </select>
-                <label class="text-[10px] font-black text-pink-400 uppercase mb-1 block">Gasto de</label>
-                <select id="p-beneficiario" class="w-full p-4 mb-4 bg-amber-50 rounded-xl text-lg outline-none">
+                <label class="text-[10px] font-black text-pink-400 uppercase mb-1 block">A quién le correspondía</label>
+                <select id="p-benef" class="w-full p-4 mb-4 bg-amber-50 rounded-xl text-lg outline-none border-none">
                     <option value="AMBOS">A Medias</option><option value="JUAN">Solo Juan</option><option value="TANIA">Solo Tania</option>
                 </select>
                 <div class="flex gap-2 mb-4">
-                    <select id="p-moneda" class="w-[120px] p-4 rounded-xl text-lg outline-none">
+                    <select id="p-moneda" class="w-[120px] p-4 rounded-xl text-lg outline-none border-none">
                         <option value="REALES">REALES</option><option value="PESOS">PESOS</option>
                     </select>
-                    <input type="number" id="p-monto" class="flex-1 p-4 rounded-xl text-lg outline-none" placeholder="0,00">
+                    <input type="number" id="p-monto" class="flex-1 p-4 rounded-xl text-lg outline-none border-none" placeholder="0,00" inputmode="decimal">
                 </div>
-                <input type="text" id="p-detalle" class="w-full p-4 mb-6 rounded-xl text-lg outline-none" placeholder="Detalle (Bidón, Ropa, Helado...)">
-                <button onclick="saveGastoPareja()" class="w-full bg-pink-600 text-white p-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#9f1239]">GUARDAR JyT</button>
+                <input type="text" id="p-detalle" class="w-full p-4 mb-6 rounded-xl text-lg outline-none border-none" placeholder="Detalle (Bidón, Ropa, Helado...)">
+                <button onclick="savePareja()" class="w-full bg-pink-600 text-white p-5 rounded-2xl font-black text-xl shadow-[0_6px_0_#9f1239] active:translate-y-1">GUARDAR JyT</button>
             </div>
 
-            <div id="caja-resultado-pareja" class="p-8 rounded-[3rem] text-center border-4 border-dashed shadow-inner mb-8">
+            <div id="res-pareja-caja" class="p-8 rounded-[3rem] text-center border-4 border-dashed shadow-inner mb-8">
                 <div class="flex justify-center items-center gap-2 mb-4 font-bold text-slate-400 uppercase text-xs">
-                    Real: <input type="number" id="tc-pareja" class="w-16 p-1 border rounded text-center font-bold text-slate-800" value="8.50" oninput="updateBalancePareja()">
+                    TC Real: <input type="number" id="tc-pareja-val" value="8.50" oninput="renderPareja()" class="w-16 p-1 border rounded text-center font-bold text-slate-800">
                 </div>
                 <p id="pareja-msg" class="text-sm font-black text-slate-500 uppercase tracking-widest mb-1"></p>
-                <p id="pareja-monto" class="text-5xl font-black"></p>
-                <div id="desglose-pareja" class="mt-4 text-[10px] text-slate-400 font-bold uppercase leading-tight"></div>
+                <p id="pareja-final" class="text-5xl font-black"></p>
+                <div id="pareja-desglose" class="mt-4 text-[10px] text-slate-400 font-bold uppercase leading-tight"></div>
             </div>
 
-            <div id="lista-gastos-pareja" class="space-y-3"></div>
+            <div id="lista-pareja" class="space-y-3"></div>
         </div>
 
     </div>
 
     <script>
         // CONFIGURACIÓN FIREBASE
-        const firebaseConfig = JSON.parse(__firebase_config);
-        firebase.initializeApp(firebaseConfig);
+        const config = JSON.parse(__firebase_config);
+        firebase.initializeApp(config);
         const db = firebase.database();
         const NODO_GRUPO = 'viaje_brasil_2026';
         const NODO_PAREJA = 'brasil_2026_interno';
 
-        let dataGrupo = [];
-        let dataPareja = [];
+        let GASTOS_G = [];
+        let GASTOS_P = [];
 
         // NAVEGACIÓN
-        function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('section-' + tabId).classList.remove('hidden');
-            
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active', 'tab-pareja-active'));
-            const btn = document.getElementById('btn-' + tabId);
-            if (tabId === 'PAREJA') btn.classList.add('tab-pareja-active');
+        function changeTab(id) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('sec-' + id).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('tab-active', 'tab-jyt-active'));
+            const btn = document.getElementById('btn-' + id);
+            if(id === 'PAREJA') btn.classList.add('tab-jyt-active');
             else btn.classList.add('tab-active');
-
-            if(tabId === 'HISTORIAL') renderHistorial();
-            if(tabId === 'BALANCE') updateBalanceGrupo();
-            if(tabId === 'PAREJA') renderPareja();
+            
+            // Forzar renderizado al cambiar de pestaña
+            if(id === 'HISTORIAL') renderHistorial();
+            if(id === 'BALANCE') renderBalance();
+            if(id === 'PAREJA') renderPareja();
         }
 
-        function toggleOtro(val) {
-            document.getElementById('g-otro').classList.toggle('hidden', val !== 'VARIOS');
-        }
+        function checkOtro(v) { document.getElementById('g-otro').classList.toggle('hidden', v !== 'VARIOS'); }
 
-        // FIREBASE LISTENER
+        // LISTENERS
         db.ref(NODO_GRUPO).on('value', snap => {
-            const val = snap.val();
-            dataGrupo = val ? Object.entries(val).map(([id, g]) => ({id, ...g})) : [];
-            // Filtro de los 100
-            dataGrupo = dataGrupo.filter(g => Number(g.monto) !== 100);
+            const data = snap.val();
+            GASTOS_G = data ? Object.entries(data).map(([id, val]) => ({id, ...val})) : [];
+            // Filtro del 100
+            GASTOS_G = GASTOS_G.filter(g => Number(g.monto) !== 100);
             renderHistorial();
-            updateBalanceGrupo();
+            renderBalance();
         });
 
         db.ref(NODO_PAREJA).on('value', snap => {
-            const val = snap.val();
-            dataPareja = val ? Object.entries(val).map(([id, g]) => ({id, ...g})) : [];
+            const data = snap.val();
+            GASTOS_P = data ? Object.entries(data).map(([id, val]) => ({id, ...val})) : [];
             renderPareja();
         });
 
-        // GUARDAR
-        function saveGastoGrupo() {
-            const monto = document.getElementById('g-monto').value;
-            if(!monto) return;
-            const rubro = document.getElementById('g-rubro').value;
-            const finalRubro = rubro === 'VARIOS' ? "Var: " + document.getElementById('g-otro').value : rubro;
+        // FUNCIONES DE GUARDADO
+        function saveGrupo() {
+            const m = document.getElementById('g-monto').value;
+            if(!m) return;
+            const r = document.getElementById('g-rubro').value;
+            const rubroFinal = (r === 'VARIOS' ? "Var: " + document.getElementById('g-otro').value : r).replace(/Bid.n/gi, "Bidón");
             
             db.ref(NODO_GRUPO).push({
                 pagador: document.getElementById('g-pagador').value,
                 moneda: document.getElementById('g-moneda').value,
-                monto: Number(monto),
-                rubro: finalRubro,
+                monto: Number(m),
+                rubro: rubroFinal,
                 fecha: new Date().toLocaleDateString('es-UY'),
                 timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('g-monto').value = "";
+                document.getElementById('g-otro').value = "";
+                alert("Guardado en Grupo");
             });
-            document.getElementById('g-monto').value = "";
-            document.getElementById('g-otro').value = "";
-            alert("Guardado en Grupo");
         }
 
-        function saveGastoPareja() {
-            const monto = document.getElementById('p-monto').value;
-            if(!monto) return;
+        function savePareja() {
+            const m = document.getElementById('p-monto').value;
+            if(!m) return;
+            const det = (document.getElementById('p-detalle').value || "Gasto J&T").replace(/Bid.n/gi, "Bidón");
+            
             db.ref(NODO_PAREJA).push({
                 pagador: document.getElementById('p-pagador').value,
-                beneficiario: document.getElementById('p-beneficiario').value,
+                beneficiario: document.getElementById('p-benef').value,
                 moneda: document.getElementById('p-moneda').value,
-                monto: Number(monto),
-                detalle: document.getElementById('p-detalle').value || "Gasto J&T",
+                monto: Number(m),
+                detalle: det,
                 fecha: new Date().toLocaleDateString('es-UY'),
                 timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('p-monto').value = "";
+                document.getElementById('p-detalle').value = "";
+                alert("Guardado en JyT");
             });
-            document.getElementById('p-monto').value = "";
-            document.getElementById('p-detalle').value = "";
-            alert("Guardado en J&T");
         }
 
         // RENDERS
         function renderHistorial() {
-            const list = document.getElementById('lista-gastos-grupo');
-            const summary = document.getElementById('resumen-rubros');
+            const list = document.getElementById('lista-gastos');
+            const table = document.getElementById('tabla-resumen');
             if(!list) return;
 
-            const rubros = dataGrupo.reduce((acc, g) => {
-                const r = g.rubro.replace(/Bid.n/gi, "Bidón");
+            const tc = Number(document.getElementById('tc-historial').value) || 1;
+            const resumen = GASTOS_G.reduce((acc, g) => {
+                const r = g.rubro;
                 acc[r] = acc[r] || { R: 0, P: 0 };
                 if(g.moneda === 'REALES') acc[r].R += g.monto; else acc[r].P += g.monto;
                 return acc;
             }, {});
 
-            summary.innerHTML = `<table class="w-full text-right">
-                <thead><tr class="text-slate-400 font-black text-[10px] uppercase"><th class="text-left">Rubro</th><th>R$</th><th>$</th></tr></thead>
-                <tbody>${Object.entries(rubros).map(([r, v]) => `
-                    <tr class="border-t border-slate-100"><td class="text-left py-2 font-bold">${r}</td><td>${v.R.toFixed(2)}</td><td>${v.P.toFixed(2)}</td></tr>
-                `).join('')}</tbody>
-            </table>`;
+            table.innerHTML = `
+                <table class="w-full text-right">
+                    <thead><tr class="text-slate-400 font-black text-[9px] uppercase"><th class="text-left">RUBRO</th><th>R$</th><th>$</th></tr></thead>
+                    <tbody>${Object.entries(resumen).sort().map(([r, v]) => `
+                        <tr class="border-t border-slate-100"><td class="text-left py-2 font-bold">${r}</td><td>${v.R.toFixed(2)}</td><td>${v.P.toFixed(2)}</td></tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
 
-            list.innerHTML = dataGrupo.slice().reverse().map(g => `
+            list.innerHTML = GASTOS_G.slice().reverse().map(g => `
                 <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
-                    <div><small class="text-slate-400 font-bold uppercase text-[9px]">${g.fecha} • ${g.pagador}</small><p class="font-bold text-slate-800">${g.rubro.replace(/Bid.n/gi, "Bidón")}</p></div>
-                    <div class="text-right"><p class="font-black text-slate-900">${g.moneda==='REALES'?'R$':'$'} ${g.monto.toFixed(2)}</p>
-                    <button onclick="deleteGasto('${NODO_GRUPO}','${g.id}')" class="text-red-400 text-[10px] font-bold underline">Borrar</button></div>
+                    <div><small class="text-slate-400 font-bold uppercase text-[9px]">${g.fecha} • ${g.pagador}</small><p class="font-bold text-slate-800">${g.rubro}</p></div>
+                    <div class="text-right">
+                        <p class="font-black text-slate-900">${g.moneda==='REALES'?'R$':'$'} ${g.monto.toFixed(2)}</p>
+                        <button onclick="borrar('${NODO_GRUPO}','${g.id}')" class="text-red-400 text-[9px] font-bold underline">Eliminar</button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function updateBalanceGrupo() {
-            const mon = document.getElementById('b-moneda').value;
-            const totals = { JUAN: 0, TANIA: 0, RICHARD: 0, ROSARIO: 0 };
-            dataGrupo.filter(g => g.moneda === mon).forEach(g => totals[g.pagador] += g.monto);
+        function renderBalance() {
+            const mon = document.getElementById('bal-moneda-sel').value;
+            const t = { JUAN: 0, TANIA: 0, RICHARD: 0, ROSARIO: 0 };
+            GASTOS_G.filter(g => g.moneda === mon).forEach(g => t[g.pagador] += g.monto);
             
-            const p1 = totals.JUAN + totals.TANIA;
-            const p2 = totals.RICHARD + totals.ROSARIO;
+            const p1 = t.JUAN + t.TANIA;
+            const p2 = t.RICHARD + t.ROSARIO;
             const total = p1 + p2;
             const dif = p1 - (total / 2);
 
-            document.getElementById('bal-p1').innerHTML = `<small class="block text-slate-500">P1 (J+T)</small>${p1.toFixed(2)}`;
-            document.getElementById('bal-p2').innerHTML = `<small class="block text-slate-500">P2 (R+R)</small>${p2.toFixed(2)}`;
-            document.getElementById('bal-total').innerText = total.toFixed(2);
+            document.getElementById('sum-p1').innerText = p1.toFixed(2);
+            document.getElementById('sum-p2').innerText = p2.toFixed(2);
+            document.getElementById('sum-total').innerText = total.toFixed(2);
             
-            const v = document.getElementById('veredicto-grupo');
+            const caja = document.getElementById('veredicto-caja');
             if(dif > 0) {
-                v.className = "p-6 rounded-3xl border-2 font-black text-lg bg-blue-50 text-blue-800 border-blue-200";
-                v.innerHTML = `PAREJA 2 DEBE A PAREJA 1<br><span class="text-3xl">${mon === 'REALES' ? 'R$' : '$'} ${dif.toFixed(2)}</span>`;
+                caja.className = "p-6 rounded-3xl border-2 font-black text-lg bg-blue-50 text-blue-800 border-blue-200";
+                caja.innerHTML = `P2 DEBE A P1<br><span class="text-3xl">${mon==='REALES'?'R$':'$'} ${dif.toFixed(2)}</span>`;
             } else {
-                v.className = "p-6 rounded-3xl border-2 font-black text-lg bg-red-50 text-red-800 border-red-200";
-                v.innerHTML = `PAREJA 1 DEBE A PAREJA 2<br><span class="text-3xl">${mon === 'REALES' ? 'R$' : '$'} ${Math.abs(dif).toFixed(2)}</span>`;
+                caja.className = "p-6 rounded-3xl border-2 font-black text-lg bg-red-50 text-red-800 border-red-200";
+                caja.innerHTML = `P1 DEBE A P2<br><span class="text-3xl">${mon==='REALES'?'R$':'$'} ${Math.abs(dif).toFixed(2)}</span>`;
             }
         }
 
-        function updateBalancePareja() {
-            const tc = Number(document.getElementById('tc-pareja').value) || 1;
-            let juanPag = 0, taniaPag = 0, interno = 0;
+        function renderPareja() {
+            const tc = Number(document.getElementById('tc-pareja-val').value) || 1;
+            let jP = 0, tP = 0, int = 0;
 
-            dataGrupo.forEach(g => {
+            GASTOS_G.forEach(g => {
                 const m = g.moneda === 'REALES' ? g.monto * tc : g.monto;
-                if(g.pagador === 'JUAN') juanPag += m; if(g.pagador === 'TANIA') taniaPag += m;
+                if(g.pagador === 'JUAN') jP += m; if(g.pagador === 'TANIA') tP += m;
             });
-            const difG = juanPag - ((juanPag + taniaPag) / 2);
+            const difG = jP - ((jP + tP) / 2);
 
-            dataPareja.forEach(g => {
+            GASTOS_P.forEach(g => {
                 const m = g.moneda === 'REALES' ? g.monto * tc : g.monto;
                 if(g.pagador === 'JUAN') {
-                    if(g.beneficiario === 'AMBOS') interno += (m/2);
-                    if(g.beneficiario === 'TANIA') interno += m;
+                    if(g.beneficiario === 'AMBOS') int += (m/2);
+                    if(g.beneficiario === 'TANIA') int += m;
                 } else {
-                    if(g.beneficiario === 'AMBOS') interno -= (m/2);
-                    if(g.beneficiario === 'JUAN') interno -= m;
+                    if(g.beneficiario === 'AMBOS') int -= (m/2);
+                    if(g.beneficiario === 'JUAN') int -= m;
                 }
             });
 
-            const final = difG + interno;
-            const box = document.getElementById('caja-resultado-pareja');
+            const final = difG + int;
+            const box = document.getElementById('res-pareja-caja');
             const msg = document.getElementById('pareja-msg');
-            const amt = document.getElementById('pareja-monto');
-            const des = document.getElementById('desglose-pareja');
+            const amt = document.getElementById('pareja-final');
+            const des = document.getElementById('pareja-desglose');
 
             if(final > 0) {
                 box.className = "p-8 rounded-[3rem] text-center border-4 border-dashed shadow-inner mb-8 bg-blue-50 border-blue-200";
@@ -300,72 +314,59 @@
                 amt.className = "text-5xl font-black text-pink-600";
                 amt.innerText = "$ " + Math.abs(final).toLocaleString('es-UY', {maximumFractionDigits:0});
             }
-            des.innerHTML = `* A favor por Grupo: $ ${difG.toLocaleString('es-UY', {maximumFractionDigits:0})}<br>* A favor por Caja Chica: $ ${interno.toLocaleString('es-UY', {maximumFractionDigits:0})}`;
-        }
+            des.innerHTML = `* Por Grupo: $ ${difG.toLocaleString('es-UY', {maximumFractionDigits:0})}<br>* Por Interno: $ ${int.toLocaleString('es-UY', {maximumFractionDigits:0})}`;
 
-        function renderPareja() {
-            const list = document.getElementById('lista-gastos-pareja');
-            list.innerHTML = dataPareja.slice().reverse().map(g => `
+            document.getElementById('lista-pareja').innerHTML = GASTOS_P.slice().reverse().map(g => `
                 <div class="bg-white p-4 rounded-xl border-l-8 flex justify-between items-center shadow-sm" style="border-color: ${g.pagador==='JUAN'?'#3b82f6':'#ec4899'}">
                     <div>
                         <span class="text-[9px] font-black px-2 py-0.5 rounded text-white ${g.beneficiario==='AMBOS'?'bg-purple-400':(g.beneficiario==='JUAN'?'bg-blue-400':'bg-pink-400')}">${g.beneficiario}</span>
-                        <p class="font-bold mt-1 text-slate-800">${g.detalle.replace(/Bid.n/gi, "Bidón")}</p>
+                        <p class="font-bold mt-1 text-slate-800">${g.detalle}</p>
                     </div>
                     <div class="text-right">
                         <p class="font-black text-slate-900">${g.moneda === 'REALES' ? 'R$' : '$'} ${g.monto.toFixed(2)}</p>
-                        <button onclick="deleteGasto('${NODO_PAREJA}','${g.id}')" class="text-red-300 text-[10px] font-bold underline">Borrar</button>
+                        <button onclick="borrar('${NODO_PAREJA}','${g.id}')" class="text-red-300 text-[9px] font-bold underline">Borrar</button>
                     </div>
                 </div>
             `).join('');
-            updateBalancePareja();
         }
 
-        function deleteGasto(nodo, id) {
-            if(confirm("¿Borrar este gasto?")) db.ref(nodo + '/' + id).remove();
-        }
+        function borrar(n, id) { if(confirm("¿Eliminar gasto?")) db.ref(n + '/' + id).remove(); }
 
-        // EXCEL EXPORT (Corregido con SUMA y ;)
-        function exportExcel() {
-            if(dataGrupo.length === 0) return;
+        // EXCEL EXPORT (FORMATO JUAN)
+        function exportarExcelTotal() {
+            if(GASTOS_G.length === 0) return alert("Sin datos");
             const sortFn = (a, b) => a.rubro.localeCompare(b.rubro) || a.timestamp - b.timestamp;
-            const reales = dataGrupo.filter(g => g.moneda === 'REALES').sort(sortFn);
-            const pesos = dataGrupo.filter(g => g.moneda === 'PESOS').sort(sortFn);
+            const reales = GASTOS_G.filter(g => g.moneda === 'REALES').sort(sortFn);
+            const pesos = GASTOS_G.filter(g => g.moneda === 'PESOS').sort(sortFn);
+            const pers = ["JUAN", "TANIA", "RICHARD", "ROSARIO"];
+            const f = (n) => n.toFixed(2).replace('.', ',');
 
-            let csv = "REPORTE DE GASTOS BRASIL 2026;;;;;\n";
-            csv += "GASTOS EN REALES;;PAREJA 1;;PAREJA 2;\n";
-            csv += "RUBRO;FECHA;JUAN;TANIA;RICHARD;ROSARIO\n";
+            let csv = "RENDICION BRASIL 2026;;PAREJA 1;;PAREJA 2;\n";
+            csv += "GASTOS EN REALES;;JUAN;TANIA;RICHARD;ROSARIO\n";
 
-            let r = 4;
-            const format = (n) => n.toFixed(2).replace('.', ',');
-            
+            let row = 3;
             reales.forEach(g => {
-                const rub = g.rubro.replace(/Bid.n/gi, "Bidón");
-                csv += `${rub};${g.fecha};${g.pagador==='JUAN'?format(g.monto):'0,00'};${g.pagador==='TANIA'?format(g.monto):'0,00'};${g.pagador==='RICHARD'?format(g.monto):'0,00'};${g.pagador==='ROSARIO'?format(g.monto):'0,00'}\n`;
-                r++;
+                csv += `${g.rubro};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
+                row++;
             });
-            csv += `SUMAS REALES;;=SUMA(C4:C${r-1});=SUMA(D4:D${r-1});=SUMA(E4:E${r-1});=SUMA(F4:F${r-1})\n\n`;
+            csv += `SUMAS REALES;;=SUMA(C3:C${row-1});=SUMA(D3:D${row-1});=SUMA(E3:E${row-1});=SUMA(F3:F${row-1})\n\n`;
 
-            const rSumRow = r; r += 3;
-            csv += "GASTOS EN PESOS;;;;;\n";
-            csv += "RUBRO;FECHA;JUAN;TANIA;RICHARD;ROSARIO\n";
-            const pStart = r;
+            const rSum = row; row += 3;
+            csv += "GASTOS EN PESOS;;JUAN;TANIA;RICHARD;ROSARIO\n";
+            const pStart = row;
             pesos.forEach(g => {
-                const rub = g.rubro.replace(/Bid.n/gi, "Bidón");
-                csv += `${rub};${g.fecha};${g.pagador==='JUAN'?format(g.monto):'0,00'};${g.pagador==='TANIA'?format(g.monto):'0,00'};${g.pagador==='RICHARD'?format(g.monto):'0,00'};${g.pagador==='ROSARIO'?format(g.monto):'0,00'}\n`;
-                r++;
+                csv += `${g.rubro};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
+                row++;
             });
-            csv += `SUMAS PESOS;;=SUMA(C${pStart}:C${r-1});=SUMA(D${pStart}:D${r-1});=SUMA(E${pStart}:E${r-1});=SUMA(F${pStart}:F${r-1})\n\n`;
+            csv += `SUMAS PESOS;;=SUMA(C${pStart}:C${row-1});=SUMA(D${pStart}:D${row-1});=SUMA(E${pStart}:E${row-1});=SUMA(F${pStart}:F${row-1})\n\n`;
 
-            const pSumRow = r; const tcRow = r + 3;
-            csv += "RESUMEN FINAL UNIFICADO;;;;;\n";
-            csv += ";;JUAN;TANIA;RICHARD;ROSARIO\n";
-            csv += `TOTAL REALES;;=C${rSumRow};=D${rSumRow};=E${rSumRow};=F${rSumRow}\n`;
-            csv += `TOTAL PESOS;;=C${pSumRow};=D${pSumRow};=E${pSumRow};=F${pSumRow}\n`;
-            csv += "COTIZACION REAL;;1,00;;;\n";
-            csv += `TOTAL EQUIV ($);;=(C${tcRow-3}*C${tcRow})+C${tcRow-2};=(D${tcRow-3}*C${tcRow})+D${tcRow-2};=(E${tcRow-3}*C${tcRow})+E${tcRow-2};=(F${tcRow-3}*C${tcRow})+F${tcRow-2}\n`;
-            
-            const fRow = tcRow + 1;
-            csv += `\nBALANCE PAREJAS (P1 - P2);;=(C${fRow}+D${fRow})-(E${fRow}+F${fRow});;;\n`;
+            const pSum = row; const tcR = row + 3;
+            csv += "TOTALES POR PERSONA;;JUAN;TANIA;RICHARD;ROSARIO\n";
+            csv += `REALES;;=C${rSum};=D${rSum};=E${rSum};=F${rSum}\n`;
+            csv += `PESOS;;=C${pSum};=D${pSum};=E${pSum};=F${pSum}\n`;
+            csv += "TC REAL;;1,00;;;\n";
+            csv += `TOTAL ($);;=(C${tcR-3}*C${tcR})+C${tcR-2};=(D${tcR-3}*C${tcR})+D${tcR-2};=(E${tcR-3}*C${tcR})+E${tcR-2};=(F${tcR-3}*C${tcR})+F${tcR-2}\n`;
+            csv += `\nBALANCE PAREJAS;;=(C${tcR+1}+D${tcR+1})-(E${tcR+1}+F${tcR+1});;;\n`;
 
             const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
@@ -375,7 +376,7 @@
         }
 
         // INIT
-        showTab('GASTOS');
+        changeTab('GASTOS');
     </script>
 </body>
-</html>
+                </html>

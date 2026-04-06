@@ -12,7 +12,6 @@
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .tab-active { color: #fbbf24; background: #1e293b; border-bottom: 4px solid #fbbf24; }
         .tab-jyt-active { color: #f472b6; background: #4c1d95; border-bottom: 4px solid #f472b6; }
-        .number-excel { text-align: right; }
     </style>
 </head>
 <body class="bg-slate-50 pb-20">
@@ -134,10 +133,22 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN FIREBASE
-        const config = JSON.parse(__firebase_config);
-        firebase.initializeApp(config);
+        // CONFIGURACIÓN FIREBASE ORIGINAL CORRECTA (Hardcodeada para que funcione en el celular)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDlHjKXf33pCEznyLAmFrTDXVPevrHe9Q",
+            authDomain: "gastoscasa-d8bc2.firebaseapp.com",
+            databaseURL: "https://gastoscasa-d8bc2-default-rtdb.firebaseio.com",
+            projectId: "gastoscasa-d8bc2",
+            storageBucket: "gastoscasa-d8bc2.firebasestorage.app",
+            messagingSenderId: "749635992986",
+            appId: "1:749635992986:web:7916d888f54eb5c3ab0e23"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
+        
         const NODO_GRUPO = 'viaje_brasil_2026';
         const NODO_PAREJA = 'brasil_2026_interno';
 
@@ -153,7 +164,6 @@
             if(id === 'PAREJA') btn.classList.add('tab-jyt-active');
             else btn.classList.add('tab-active');
             
-            // Forzar renderizado al cambiar de pestaña
             if(id === 'HISTORIAL') renderHistorial();
             if(id === 'BALANCE') renderBalance();
             if(id === 'PAREJA') renderPareja();
@@ -161,11 +171,11 @@
 
         function checkOtro(v) { document.getElementById('g-otro').classList.toggle('hidden', v !== 'VARIOS'); }
 
-        // LISTENERS
+        // LISTENERS (Carga automática de datos)
         db.ref(NODO_GRUPO).on('value', snap => {
             const data = snap.val();
             GASTOS_G = data ? Object.entries(data).map(([id, val]) => ({id, ...val})) : [];
-            // Filtro del 100
+            // Filtro del 100 de forma segura
             GASTOS_G = GASTOS_G.filter(g => Number(g.monto) !== 100);
             renderHistorial();
             renderBalance();
@@ -182,6 +192,7 @@
             const m = document.getElementById('g-monto').value;
             if(!m) return;
             const r = document.getElementById('g-rubro').value;
+            // Corrección ortográfica instantánea de Bidón al guardar
             const rubroFinal = (r === 'VARIOS' ? "Var: " + document.getElementById('g-otro').value : r).replace(/Bid.n/gi, "Bidón");
             
             db.ref(NODO_GRUPO).push({
@@ -218,7 +229,7 @@
             });
         }
 
-        // RENDERS
+        // RENDERS DE PANTALLA
         function renderHistorial() {
             const list = document.getElementById('lista-gastos');
             const table = document.getElementById('tabla-resumen');
@@ -226,7 +237,7 @@
 
             const tc = Number(document.getElementById('tc-historial').value) || 1;
             const resumen = GASTOS_G.reduce((acc, g) => {
-                const r = g.rubro;
+                const r = g.rubro.replace(/Bid.n/gi, "Bidón");
                 acc[r] = acc[r] || { R: 0, P: 0 };
                 if(g.moneda === 'REALES') acc[r].R += g.monto; else acc[r].P += g.monto;
                 return acc;
@@ -243,7 +254,7 @@
 
             list.innerHTML = GASTOS_G.slice().reverse().map(g => `
                 <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
-                    <div><small class="text-slate-400 font-bold uppercase text-[9px]">${g.fecha} • ${g.pagador}</small><p class="font-bold text-slate-800">${g.rubro}</p></div>
+                    <div><small class="text-slate-400 font-bold uppercase text-[9px]">${g.fecha} • ${g.pagador}</small><p class="font-bold text-slate-800">${g.rubro.replace(/Bid.n/gi, "Bidón")}</p></div>
                     <div class="text-right">
                         <p class="font-black text-slate-900">${g.moneda==='REALES'?'R$':'$'} ${g.monto.toFixed(2)}</p>
                         <button onclick="borrar('${NODO_GRUPO}','${g.id}')" class="text-red-400 text-[9px] font-bold underline">Eliminar</button>
@@ -269,10 +280,10 @@
             const caja = document.getElementById('veredicto-caja');
             if(dif > 0) {
                 caja.className = "p-6 rounded-3xl border-2 font-black text-lg bg-blue-50 text-blue-800 border-blue-200";
-                caja.innerHTML = `P2 DEBE A P1<br><span class="text-3xl">${mon==='REALES'?'R$':'$'} ${dif.toFixed(2)}</span>`;
+                caja.innerHTML = `P2 DEBE A P1<br><span class="text-3xl">${mon === 'REALES' ? 'R$' : '$'} ${dif.toFixed(2)}</span>`;
             } else {
                 caja.className = "p-6 rounded-3xl border-2 font-black text-lg bg-red-50 text-red-800 border-red-200";
-                caja.innerHTML = `P1 DEBE A P2<br><span class="text-3xl">${mon==='REALES'?'R$':'$'} ${Math.abs(dif).toFixed(2)}</span>`;
+                caja.innerHTML = `P1 DEBE A P2<br><span class="text-3xl">${mon === 'REALES' ? 'R$' : '$'} ${Math.abs(dif).toFixed(2)}</span>`;
             }
         }
 
@@ -320,7 +331,7 @@
                 <div class="bg-white p-4 rounded-xl border-l-8 flex justify-between items-center shadow-sm" style="border-color: ${g.pagador==='JUAN'?'#3b82f6':'#ec4899'}">
                     <div>
                         <span class="text-[9px] font-black px-2 py-0.5 rounded text-white ${g.beneficiario==='AMBOS'?'bg-purple-400':(g.beneficiario==='JUAN'?'bg-blue-400':'bg-pink-400')}">${g.beneficiario}</span>
-                        <p class="font-bold mt-1 text-slate-800">${g.detalle}</p>
+                        <p class="font-bold mt-1 text-slate-800">${g.detalle.replace(/Bid.n/gi, "Bidón")}</p>
                     </div>
                     <div class="text-right">
                         <p class="font-black text-slate-900">${g.moneda === 'REALES' ? 'R$' : '$'} ${g.monto.toFixed(2)}</p>
@@ -332,43 +343,84 @@
 
         function borrar(n, id) { if(confirm("¿Eliminar gasto?")) db.ref(n + '/' + id).remove(); }
 
-        // EXCEL EXPORT (FORMATO JUAN)
+        // EXCEL EXPORT - SÚPER ROBUSTO
         function exportarExcelTotal() {
-            if(GASTOS_G.length === 0) return alert("Sin datos");
+            if(GASTOS_G.length === 0) return alert("No hay datos para exportar");
+            
+            // Ordenar por Rubro alfabéticamente, luego por Fecha
             const sortFn = (a, b) => a.rubro.localeCompare(b.rubro) || a.timestamp - b.timestamp;
             const reales = GASTOS_G.filter(g => g.moneda === 'REALES').sort(sortFn);
             const pesos = GASTOS_G.filter(g => g.moneda === 'PESOS').sort(sortFn);
-            const pers = ["JUAN", "TANIA", "RICHARD", "ROSARIO"];
-            const f = (n) => n.toFixed(2).replace('.', ',');
+            
+            // Función para dar formato a los números (cambia punto por coma y añade dos decimales)
+            const f = (n) => Number(n).toFixed(2).replace('.', ',');
 
-            let csv = "RENDICION BRASIL 2026;;PAREJA 1;;PAREJA 2;\n";
-            csv += "GASTOS EN REALES;;JUAN;TANIA;RICHARD;ROSARIO\n";
+            let rowIdx = 1; // Llevamos la cuenta exacta de la fila para las fórmulas
 
-            let row = 3;
+            // \ufeff es el código necesario para que Excel lea los acentos (como la ó de Bidón) en un archivo CSV
+            let csv = "\ufeffRENDICION BRASIL 2026;;PAREJA 1;;PAREJA 2;\n"; rowIdx++;
+            csv += "GASTOS EN REALES;;JUAN;TANIA;RICHARD;ROSARIO\n"; rowIdx++;
+            
+            // ==========================================
+            // BLOQUE REALES
+            // ==========================================
+            let startR = rowIdx;
             reales.forEach(g => {
-                csv += `${g.rubro};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
-                row++;
+                const rub = g.rubro.replace(/Bid.n/gi, "Bidón");
+                csv += `${rub};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
+                rowIdx++;
             });
-            csv += `SUMAS REALES;;=SUMA(C3:C${row-1});=SUMA(D3:D${row-1});=SUMA(E3:E${row-1});=SUMA(F3:F${row-1})\n\n`;
+            let endR = rowIdx - 1;
+            
+            // SUMAS REALES - Si está vacío ponemos 0,00 para evitar error #NAME
+            let fReal = reales.length > 0 ? `=SUMA(C${startR}:C${endR})` : '0,00';
+            csv += `SUMAS REALES;;${reales.length>0?fReal:'0,00'};${reales.length>0?`=SUMA(D${startR}:D${endR})`:'0,00'};${reales.length>0?`=SUMA(E${startR}:E${endR})`:'0,00'};${reales.length>0?`=SUMA(F${startR}:F${endR})`:'0,00'}\n`;
+            let sumRealRow = rowIdx;
+            rowIdx++;
+            csv += "\n"; rowIdx++;
 
-            const rSum = row; row += 3;
-            csv += "GASTOS EN PESOS;;JUAN;TANIA;RICHARD;ROSARIO\n";
-            const pStart = row;
+            // ==========================================
+            // BLOQUE PESOS
+            // ==========================================
+            csv += "GASTOS EN PESOS;;JUAN;TANIA;RICHARD;ROSARIO\n"; rowIdx++;
+            let startP = rowIdx;
             pesos.forEach(g => {
-                csv += `${g.rubro};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
-                row++;
+                const rub = g.rubro.replace(/Bid.n/gi, "Bidón");
+                csv += `${rub};${g.fecha};${g.pagador==='JUAN'?f(g.monto):'0,00'};${g.pagador==='TANIA'?f(g.monto):'0,00'};${g.pagador==='RICHARD'?f(g.monto):'0,00'};${g.pagador==='ROSARIO'?f(g.monto):'0,00'}\n`;
+                rowIdx++;
             });
-            csv += `SUMAS PESOS;;=SUMA(C${pStart}:C${row-1});=SUMA(D${pStart}:D${row-1});=SUMA(E${pStart}:E${row-1});=SUMA(F${pStart}:F${row-1})\n\n`;
+            let endP = rowIdx - 1;
+            
+            // SUMAS PESOS
+            let fPeso = pesos.length > 0 ? `=SUMA(C${startP}:C${endP})` : '0,00';
+            csv += `SUMAS PESOS;;${pesos.length>0?fPeso:'0,00'};${pesos.length>0?`=SUMA(D${startP}:D${endP})`:'0,00'};${pesos.length>0?`=SUMA(E${startP}:E${endP})`:'0,00'};${pesos.length>0?`=SUMA(F${startP}:F${endP})`:'0,00'}\n`;
+            let sumPesoRow = rowIdx;
+            rowIdx++;
+            csv += "\n"; rowIdx++;
 
-            const pSum = row; const tcR = row + 3;
-            csv += "TOTALES POR PERSONA;;JUAN;TANIA;RICHARD;ROSARIO\n";
-            csv += `REALES;;=C${rSum};=D${rSum};=E${rSum};=F${rSum}\n`;
-            csv += `PESOS;;=C${pSum};=D${pSum};=E${pSum};=F${pSum}\n`;
-            csv += "TC REAL;;1,00;;;\n";
-            csv += `TOTAL ($);;=(C${tcR-3}*C${tcR})+C${tcR-2};=(D${tcR-3}*C${tcR})+D${tcR-2};=(E${tcR-3}*C${tcR})+E${tcR-2};=(F${tcR-3}*C${tcR})+F${tcR-2}\n`;
-            csv += `\nBALANCE PAREJAS;;=(C${tcR+1}+D${tcR+1})-(E${tcR+1}+F${tcR+1});;;\n`;
+            // ==========================================
+            // TOTALES Y BALANCE MATEMÁTICO
+            // ==========================================
+            csv += "TOTALES POR PERSONA;;JUAN;TANIA;RICHARD;ROSARIO\n"; rowIdx++;
+            csv += `REALES;;=C${sumRealRow};=D${sumRealRow};=E${sumRealRow};=F${sumRealRow}\n`; rowIdx++;
+            csv += `PESOS;;=C${sumPesoRow};=D${sumPesoRow};=E${sumPesoRow};=F${sumPesoRow}\n`; rowIdx++;
+            
+            // Esta celda C(tcRow) es donde vos ponés la cotización del real
+            csv += "TC REAL;;1,00;;;\n"; 
+            let tcRow = rowIdx; 
+            rowIdx++;
+            
+            csv += `TOTAL ($);;=(C${tcRow-2}*C${tcRow})+C${tcRow-1};=(D${tcRow-2}*C${tcRow})+D${tcRow-1};=(E${tcRow-2}*C${tcRow})+E${tcRow-1};=(F${tcRow-2}*C${tcRow})+F${tcRow-1}\n`; 
+            let totalRow = rowIdx; 
+            rowIdx++;
+            
+            csv += "\n"; rowIdx++;
+            
+            // Fórmula final: Suma Juan + Tania y le resta Richard + Rosario
+            csv += `BALANCE PAREJAS;;=(C${totalRow}+D${totalRow})-(E${totalRow}+F${totalRow});;;\n`;
 
-            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            // DESCARGA
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.download = `Rendicion_Brasil_2026.csv`;
@@ -379,4 +431,4 @@
         changeTab('GASTOS');
     </script>
 </body>
-                </html>
+    </html>

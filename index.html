@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brasil 2026 - Control de Gastos</title>
+    <title>Brasil 2026 - Rendición de Cuentas</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
@@ -11,30 +11,34 @@
         :root { --bg: #f8fafc; --header-h: 70px; --accent: #16a34a; --pareja-bg: #fdf2f8; --pareja-accent: #db2777; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-top: calc(var(--header-h) + 20px); color: #334155; }
         
+        /* Pestañas */
         .tabs { position: fixed; top: 0; width: 100%; background: #0f172a; display: flex; height: var(--header-h); box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; }
-        .tab-btn { flex: 1; border: none; background: none; font-size: 14px; font-weight: 900; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; transition: 0.2s;}
+        .tab-btn { flex: 1; border: none; background: none; font-size: 13px; font-weight: 900; color: #94a3b8; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; transition: 0.2s;}
         .tab-btn.active { color: #fbbf24; background: #1e293b; border-bottom: 5px solid #fbbf24; }
-        .tab-btn-pareja { color: #fbcfe8; }
-        .tab-btn-pareja.active { color: #f472b6; border-bottom-color: #f472b6; }
+        .tab-btn-pareja { color: #fbcfe8; border-left: 1px solid #334155; }
+        .tab-btn-pareja.active { color: #f472b6; border-bottom-color: #f472b6; background: #4c1d95; }
         
         .container { padding: 15px; display: none; max-width: 600px; margin: auto; }
         .container.active { display: block; }
 
         .card { background: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .card-pareja { background: var(--pareja-bg); border-color: #fbcfe8; }
-        h2 { font-size: 22px; font-weight: 900; margin-top: 0; color: #1e293b; text-transform: uppercase; border-bottom: 4px solid #fbbf24; display: inline-block; margin-bottom: 20px; }
+        h2 { font-size: 20px; font-weight: 900; margin-top: 0; color: #1e293b; text-transform: uppercase; border-bottom: 4px solid #fbbf24; display: inline-block; margin-bottom: 20px; }
         h2.titulo-pareja { color: var(--pareja-accent); border-color: var(--pareja-accent); }
         
         label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 800; color: #475569; text-transform: uppercase; }
-        select, input { width: 100%; padding: 16px; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; box-sizing: border-box; color: #000; background: #fff;}
+        select, input { width: 100%; padding: 16px; margin-bottom: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 17px; box-sizing: border-box; color: #000; background: #fff;}
         
-        .btn-save { background: var(--accent); color: white; padding: 20px; border: none; border-radius: 15px; font-weight: 900; font-size: 20px; cursor: pointer; width: 100%; box-shadow: 0 5px 0 #15803d; transition: 0.1s;}
+        /* Ajuste para que REALES no se corte en JyT */
+        #moneda-pareja { min-width: 110px; flex: 1.2; }
+
+        .btn-save { background: var(--accent); color: white; padding: 20px; border: none; border-radius: 15px; font-weight: 900; font-size: 18px; cursor: pointer; width: 100%; box-shadow: 0 5px 0 #15803d; transition: 0.1s; margin-top: 5px;}
         .btn-save:active { transform: translateY(5px); box-shadow: none; }
-        .btn-excel { background: #2563eb; box-shadow: 0 5px 0 #1e40af; margin-bottom: 20px;}
+        .btn-excel { background: #2563eb; box-shadow: 0 5px 0 #1e40af; margin-bottom: 25px; font-size: 16px; }
         .btn-save-pareja { background: var(--pareja-accent); box-shadow: 0 5px 0 #9f1239; }
         
         .seccion-titulo { background: #334155; color: white; padding: 12px 15px; border-radius: 10px; font-size: 16px; font-weight: 800; margin: 25px 0 15px 0; text-align: center; }
-        .historial-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+        .historial-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
 
         .reporte-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
         .reporte-tabla th { text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 12px; }
@@ -52,6 +56,7 @@
         .liquidador-box { background: #fdf2f8; border: 2px solid #f472b6; border-radius: 20px; padding: 20px; margin-top: 20px; }
         .input-cambio { background: #fff; border: 2px solid #cbd5e1; font-weight: bold; text-align: center; font-size: 20px; color: #be185d;}
         
+        /* Estilos Pareja */
         .badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; display: inline-block; margin-bottom:5px;}
         .badge-mitad { background: #8b5cf6; }
         .badge-juan { background: #2563eb; }
@@ -65,15 +70,15 @@
 <body>
 
 <nav class="tabs">
-    <button class="tab-btn active" onclick="showTab('CARGAR_GRUPO', this)">GASTOS</button>
-    <button class="tab-btn" onclick="showTab('HISTORIAL_GRUPO', this)">HISTORICO</button>
-    <button class="tab-btn" onclick="showTab('BALANCE_GRUPO', this)">BALANCE</button>
+    <button class="tab-btn active" onclick="showTab('CARGAR_GRUPO', this)">Gastos</button>
+    <button class="tab-btn" onclick="showTab('HISTORIAL_GRUPO', this)">Historico</button>
+    <button class="tab-btn" onclick="showTab('BALANCE_GRUPO', this)">Balance</button>
     <button class="tab-btn tab-btn-pareja" onclick="showTab('PAREJA_INTERNO', this)">JyT</button>
 </nav>
 
 <!-- 1. GASTOS -->
 <div id="CARGAR_GRUPO" class="container active">
-    <h2>NUEVO GASTO GRUPAL</h2>
+    <h2>NUEVO GASTO GRUPO</h2>
     <div class="card">
         <label>¿Quién Pagó?</label>
         <select id="pagador">
@@ -111,7 +116,7 @@
 <!-- 2. HISTORICO -->
 <div id="HISTORIAL_GRUPO" class="container">
     <h2>HISTORICO GRUPAL</h2>
-    <button class="btn-save btn-excel" onclick="exportarExcel()">📊 DESCARGAR EXCEL</button>
+    <button class="btn-save btn-excel" onclick="exportarExcel()">📊 GENERAR REPORTE EXCEL</button>
     
     <div class="card" style="padding:15px">
         <label style="font-size:14px; color:#1e293b">RESUMEN POR RUBRO</label>
@@ -179,7 +184,7 @@
         </select>
         <label>Moneda / Monto</label>
         <div style="display:flex; gap:10px;">
-            <select id="moneda-pareja" style="flex:1">
+            <select id="moneda-pareja">
                 <option value="REALES">REALES</option>
                 <option value="PESOS">PESOS</option>
             </select>
@@ -217,7 +222,7 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    const NODO_GRUPO = 'viaje_brasil_2026'; // Base original con historial
+    const NODO_GRUPO = 'viaje_brasil_2026';
     const NODO_PAREJA = 'brasil_2026_interno';
 
     let todosLosGastosGrupo = [];
@@ -255,6 +260,9 @@
             todosLosGastosGrupo = [];
             s.forEach(c => {
                 const g = c.val(); g.id = c.key;
+                // FILTRO: Borramos el gasto de "100" que mencionaste
+                if (g.monto === 100 && g.moneda === "PESOS" && g.rubro === "VARIOS") return; 
+                
                 todosLosGastosGrupo.push(g);
                 if(gastos[g.moneda]) gastos[g.moneda].push(g);
             });
@@ -293,15 +301,75 @@
     }
 
     function exportarExcel() {
-        if (todosLosGastosGrupo.length === 0) return alert("Nada para exportar");
-        let csv = "\uFEFFFECHA;PAGADOR;RUBRO;MONEDA;MONTO\n";
-        todosLosGastosGrupo.forEach(g => {
-            csv += `${g.fecha};${g.pagador};${g.rubro.replace(/;/g, ",")};${g.moneda};${g.monto.toLocaleString('es-UY', {useGrouping:false})}\n`;
+        if (todosLosGastosGrupo.length === 0) return alert("No hay datos para exportar");
+
+        // Separamos por moneda
+        const reales = todosLosGastosGrupo.filter(g => g.moneda === "REALES").sort((a,b) => a.rubro.localeCompare(b.rubro) || a.timestamp - b.timestamp);
+        const pesos = todosLosGastosGrupo.filter(g => g.moneda === "PESOS").sort((a,b) => a.rubro.localeCompare(b.rubro) || a.timestamp - b.timestamp);
+
+        const personas = ["JUAN", "TANIA", "RICHARD", "ROSARIO"];
+        
+        // BOM para caracteres especiales (ñ, tildes)
+        let csv = "\uFEFF"; 
+
+        // 1. BLOQUE REALES
+        csv += "--- GASTOS EN REALES ---\n";
+        csv += "RUBRO;FECHA;JUAN (P1);TANIA (P1);RICHARD (P2);ROSARIO (P2)\n";
+        reales.forEach(g => {
+            let row = `${g.rubro};${g.fecha};`;
+            personas.forEach(p => { row += (g.pagador === p ? g.monto.toString().replace('.',',') : "0") + ";"; });
+            csv += row + "\n";
         });
+        
+        // Sumas REALES
+        let startRowReal = 3;
+        let endRowReal = reales.length + 2;
+        csv += "SUMAS REALES;;";
+        if (reales.length > 0) {
+            csv += `=SUMA(C${startRowReal}:C${endRowReal});=SUMA(D${startRowReal}:D${endRowReal});=SUMA(E${startRowReal}:E${endRowReal});=SUMA(F${startRowReal}:F${endRowReal})\n\n`;
+        } else {
+            csv += "0;0;0;0\n\n";
+        }
+
+        // 2. BLOQUE PESOS
+        csv += "--- GASTOS EN PESOS ---\n";
+        csv += "RUBRO;FECHA;JUAN (P1);TANIA (P1);RICHARD (P2);ROSARIO (P2)\n";
+        let startRowPesos = endRowReal + 5;
+        pesos.forEach(g => {
+            let row = `${g.rubro};${g.fecha};`;
+            personas.forEach(p => { row += (g.pagador === p ? g.monto.toString().replace('.',',') : "0") + ";"; });
+            csv += row + "\n";
+        });
+        let endRowPesos = startRowPesos + pesos.length - 1;
+        csv += "SUMAS PESOS;;";
+        if (pesos.length > 0) {
+            csv += `=SUMA(C${startRowPesos}:C${endRowPesos});=SUMA(D${startRowPesos}:D${endRowPesos});=SUMA(E${startRowPesos}:E${endRowPesos});=SUMA(F${startRowPesos}:F${endRowPesos})\n\n`;
+        } else {
+            csv += "0;0;0;0\n\n";
+        }
+
+        // 3. LIQUIDACION FINAL (Uso de Fórmulas)
+        let sumRealRow = endRowReal + 1;
+        let sumPesoRow = endRowPesos + 1;
+        let tCambioRow = sumPesoRow + 3;
+        let subTotalRow = tCambioRow + 2;
+
+        csv += "--- RESUMEN FINAL ---\n";
+        csv += ";;JUAN;TANIA;RICHARD;ROSARIO\n";
+        csv += `TOTAL REALES;;=C${sumRealRow};=D${sumRealRow};=E${sumRealRow};=F${sumRealRow}\n`;
+        csv += `TOTAL PESOS;;=C${sumPesoRow};=D${sumPesoRow};=E${sumPesoRow};=F${sumPesoRow}\n`;
+        csv += "COTIZACION REAL;;1;;;\n"; // Fila tCambioRow
+        csv += "\n";
+        csv += `SUBTOTAL (REALES -> PESOS);;=C${subTotalRow-2}*C${tCambioRow};=D${subTotalRow-2}*C${tCambioRow};=E${subTotalRow-2}*C${tCambioRow};=F${subTotalRow-2}*C${tCambioRow}\n`;
+        csv += `TOTAL FINAL ($);;=C${subTotalRow}+C${subTotalRow-3};=D${subTotalRow}+D${subTotalRow-3};=E${subTotalRow}+E${subTotalRow-3};=F${subTotalRow}+F${subTotalRow-3}\n`;
+        
+        csv += "\n";
+        csv += "BALANCE PAREJAS ( (P1) - (P2) );;=(C"+(subTotalRow+1)+"+D"+(subTotalRow+1)+")-(E"+(subTotalRow+1)+"+F"+(subTotalRow+1)+");;;\n";
+
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "Rendicion_Gastos_Brasil.csv";
+        link.download = `Rendicion_Brasil_2026_${new Date().toLocaleDateString()}.csv`;
         link.click();
     }
 
@@ -314,6 +382,7 @@
             let ind = {JUAN:0, TANIA:0, ROSARIO:0, RICHARD:0};
             s.forEach(c => {
                 const g = c.val();
+                if (g.monto === 100 && g.moneda === "PESOS") return;
                 const pareja = ["JUAN", "TANIA"].includes(g.pagador) ? 'P1' : 'P2';
                 sumasGlobales[pareja][g.moneda] += g.monto;
                 if(g.moneda === monSel) ind[g.pagador] += g.monto;
@@ -344,7 +413,7 @@
         const pag = document.getElementById('pagador-pareja').value, ben = document.getElementById('beneficiario-pareja').value;
         const mon = document.getElementById('moneda-pareja').value, monP = parseFloat(document.getElementById('monto-pareja').value);
         let det = document.getElementById('detalle-pareja').value.trim();
-        if(!monP || monP <= 0) return alert("Monto!");
+        if(!monP || monP <= 0) return alert("Ingresa un monto");
         db.ref(NODO_PAREJA).push({ pagador: pag, beneficiario: ben, moneda: mon, monto: monP, detalle: det || "Gasto J&T", timestamp: firebase.database.ServerValue.TIMESTAMP, fecha: new Date().toLocaleDateString('es-UY') }).then(()=> { alert("Guardado"); document.getElementById('monto-pareja').value=""; cargarPantallaPareja(); });
     }
 
@@ -367,22 +436,42 @@
         Promise.all([db.ref(NODO_GRUPO).once('value'), db.ref(NODO_PAREJA).once('value')]).then(snaps => {
             let jPagGrupo = 0, tPagGrupo = 0;
             snaps[0].forEach(c => {
-                const g = c.val(); const mP = g.moneda === 'REALES' ? (g.monto * tc) : g.monto;
+                const g = c.val(); if (g.monto === 100 && g.moneda === "PESOS") return;
+                const mP = g.moneda === 'REALES' ? (g.monto * tc) : g.monto;
                 if(g.pagador === 'JUAN') jPagGrupo += mP; if(g.pagador === 'TANIA') tPagGrupo += mP;
             });
-            const p1TotalGrupo = jPagGrupo + tPagGrupo; const jDebeGrupo = jPagGrupo - (p1TotalGrupo / 2);
-            let jDebePareja = 0; snaps[1].forEach(c => {
+            const p1TotalGrupo = jPagGrupo + tPagGrupo; 
+            const jDebeGrupo = jPagGrupo - (p1TotalGrupo / 2);
+            let jSaldoPareja = 0; 
+            snaps[1].forEach(c => {
                 const g = c.val(); const mP = g.moneda === 'REALES' ? (g.monto * tc) : g.monto;
-                if(g.pagador === 'JUAN') { if(g.beneficiario === 'AMBOS') jDebePareja -= (mP/2); if(g.beneficiario === 'TANIA') jDebePareja -= mP; }
-                else { if(g.beneficiario === 'AMBOS') jDebePareja += (mO/2); if(g.beneficiario === 'JUAN') jDebePareja += mP; }
+                if(g.pagador === 'JUAN') { if(g.beneficiario === 'AMBOS') jSaldoPareja += (mP/2); if(g.beneficiario === 'TANIA') jSaldoPareja += 0; if(g.beneficiario === 'TANIA') jSaldoPareja = jSaldoPareja; /* Lógica ya cubierta por pagador */ }
+                // Re-calculando balance puro: (Lo que pagué) - (Lo que me tocaba pagar)
             });
-            const final = jDebeGrupo - jDebePareja; // Simplificación Splitwise
+            
+            // Lógica final simplificada:
+            let jMontoPagado = 0, tMontoPagado = 0, jMontoLeTocaba = 0, tMontoLeTocaba = 0;
+            // 1. Grupo (Splitwise entre Tania y Juan de su mitad)
+            jMontoPagado += jPagGrupo; tMontoPagado += tPagGrupo;
+            jMontoLeTocaba += (p1TotalGrupo/2); tMontoLeTocaba += (p1TotalGrupo/2);
+            // 2. Pareja
+            snaps[1].forEach(c => {
+                const g = c.val(); const mP = g.moneda === 'REALES' ? (g.monto * tc) : g.monto;
+                if(g.pagador === 'JUAN') jMontoPagado += mP; else tMontoPagado += mP;
+                if(g.beneficiario === 'JUAN') jMontoLeTocaba += mP;
+                else if(g.beneficiario === 'TANIA') tMontoLeTocaba += mP;
+                else { jMontoLeTocaba += mP/2; tMontoLeTocaba += mP/2; }
+            });
+
+            const final = jMontoPagado - jMontoLeTocaba;
             const v = document.getElementById('veredicto-pareja');
-            if(final > 0) { v.className = "resumen-saldo-pareja debe-tania"; v.innerHTML = `TANIA DEBE A JUAN<br><b>$ ${Math.abs(final).toLocaleString({maximumFractionDigits:0})}</b>`; }
-            else { v.className = "resumen-saldo-pareja debe-juan"; v.innerHTML = `JUAN DEBE A TANIA<br><b>$ ${Math.abs(final).toLocaleString({maximumFractionDigits:0})}</b>`; }
-            document.getElementById('desglose-pareja').innerHTML = `* Juan tiene a favor del grupo: $${jDebeGrupo.toLocaleString()}<br>* Por caja chica J&T: $${(-jDebePareja).toLocaleString()}`;
+            if(final > 0) { v.className = "resumen-saldo-pareja debe-tania"; v.innerHTML = `TANIA DEBE A JUAN<br><b>$ ${Math.abs(final).toLocaleString(undefined, {maximumFractionDigits:0})}</b>`; }
+            else if(final < 0) { v.className = "resumen-saldo-pareja debe-juan"; v.innerHTML = `JUAN DEBE A TANIA<br><b>$ ${Math.abs(final).toLocaleString(undefined, {maximumFractionDigits:0})}</b>`; }
+            else { v.className = "resumen-saldo-pareja empate"; v.innerHTML = "ESTÁN HECHOS"; }
+            
+            document.getElementById('desglose-pareja').innerHTML = `* Juan pagó total: $${jMontoPagado.toLocaleString()}<br>* A Juan le tocaba: $${jMontoLeTocaba.toLocaleString()}`;
         });
     }
 </script>
 </body>
-            </html>
+                    </html>

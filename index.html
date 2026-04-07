@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -133,7 +134,7 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN FIREBASE 
+        // CONFIGURACIÓN FIREBASE ORIGINAL
         const firebaseConfig = {
             apiKey: "AIzaSyBDlHjKXf33pCEznyLAmFrTDXVPevrHe9Q",
             authDomain: "gastoscasa-d8bc2.firebaseapp.com",
@@ -175,7 +176,6 @@
         db.ref(NODO_GRUPO).on('value', snap => {
             const data = snap.val();
             GASTOS_G = data ? Object.entries(data).map(([id, val]) => ({id, ...val})) : [];
-            // Filtro del 100 de forma segura
             GASTOS_G = GASTOS_G.filter(g => Number(g.monto) !== 100);
             renderHistorial();
             renderBalance();
@@ -236,10 +236,9 @@
 
             const tc = Number(document.getElementById('tc-historial').value) || 1;
             
-            // AGRUPAMIENTO INTELIGENTE PARA LA TABLA DE ARRIBA (Todos los VAR: van a VARIOS)
             const resumen = GASTOS_G.reduce((acc, g) => {
                 let r = g.rubro.replace(/Bid.n/gi, "Bidón");
-                if (r.toUpperCase().startsWith("VAR:")) r = "VARIOS"; // <-- Agrupación corregida
+                if (r.toUpperCase().startsWith("VAR:")) r = "VARIOS";
                 acc[r] = acc[r] || { R: 0, P: 0 };
                 if(g.moneda === 'REALES') acc[r].R += g.monto; else acc[r].P += g.monto;
                 return acc;
@@ -346,12 +345,11 @@
         function borrar(n, id) { if(confirm("¿Eliminar gasto?")) db.ref(n + '/' + id).remove(); }
 
         // ==========================================
-        // EXCEL EXPORT - MATEMÁTICA JS A PRUEBA DE FALLOS
+        // EXCEL EXPORT - MATEMÁTICA CORREGIDA (DEUDA = DIFERENCIA / 2)
         // ==========================================
         function exportarExcelTotal() {
             if(GASTOS_G.length === 0) return alert("No hay datos para exportar");
             
-            // Reemplazo cualquier acento en la palabra Bidón por "Bidon" para evitar caracteres raros en el archivo
             const cleanText = (txt) => txt.replace(/Bid.n/gi, "Bidon");
             const f = (n) => Number(n).toFixed(2).replace('.', ',');
 
@@ -359,7 +357,6 @@
             const reales = GASTOS_G.filter(g => g.moneda === 'REALES').sort(sortFn);
             const pesos = GASTOS_G.filter(g => g.moneda === 'PESOS').sort(sortFn);
             
-            // \ufeff ayuda a algunos Excel con codificación
             let csv = "\ufeffRENDICION BRASIL 2026;;PAREJA 1;;PAREJA 2;\n";
             
             // --- REALES ---
@@ -383,23 +380,21 @@
             csv += `SUMAS PESOS;;${f(sumPJ)};${f(sumPT)};${f(sumPRi)};${f(sumPRo)}\n\n`;
 
             // --- TOTALES Y MATEMÁTICA ---
-            // Tomamos la cotización de la vista Historial
             const tc = Number(document.getElementById('tc-historial').value) || 1;
             
-            const totJ = (sumRJ * tc) + sumPJ;
-            const totT = (sumRT * tc) + sumPT;
-            const totRi = (sumRRi * tc) + sumPRi;
-            const totRo = (sumRRo * tc) + sumPRo;
+            const totP1 = ((sumRJ + sumRT) * tc) + (sumPJ + sumPT);
+            const totP2 = ((sumRRi + sumRRo) * tc) + (sumPRi + sumPRo);
             
-            const balFinal = (totJ + totT) - (totRi + totRo);
+            // LA MAGIA ESTÁ ACÁ: Para saber la DEUDA, se resta lo que pagó cada uno y se DIVIDE ENTRE 2.
+            const deudaFinal = (totP1 - totP2) / 2;
 
             csv += "TOTALES POR PERSONA;;JUAN;TANIA;RICHARD;ROSARIO\n";
             csv += `TOTAL REALES;;${f(sumRJ)};${f(sumRT)};${f(sumRRi)};${f(sumRRo)}\n`;
             csv += `TOTAL PESOS;;${f(sumPJ)};${f(sumPT)};${f(sumPRi)};${f(sumPRo)}\n`;
             csv += `TC REAL USADO PARA CÁLCULO:;;${f(tc)};;;\n`;
-            csv += `TOTAL FINAL EN PESOS ($);;${f(totJ)};${f(totT)};${f(totRi)};${f(totRo)}\n\n`;
+            csv += `TOTAL FINAL PAREJAS EN PESOS ($);;P1 (J+T):;${f(totP1)};P2 (R+R):;${f(totP2)}\n\n`;
             
-            csv += `BALANCE PAREJAS ( P1 - P2 );;${f(balFinal)};;;\n`;
+            csv += `DEUDA FINAL ENTRE PAREJAS;;${f(deudaFinal)};;;\n`;
             csv += `(Si es positivo P2 debe a P1. Si es negativo P1 debe a P2);;;;;\n`;
 
             // DESCARGA
@@ -414,4 +409,4 @@
         changeTab('GASTOS');
     </script>
 </body>
-                    </html>
+</html>
